@@ -26,7 +26,7 @@ const Dashboard = ({ user: userProp, setUser, isLoading: parentLoading }) => {
       try {
         const res = await axios.get(`${API_URL}/auth/login/success`, { withCredentials: true });
         if (res.data && res.data.user) {
-          console.log('Dashboard: User session fetched successfully:', res.data.user);
+          console.log('✅ Dashboard: User authenticated -', res.data.user.name);
           setLocalUser(res.data.user);
           setHasVoted(res.data.user.hasVoted || false);
           if (setUser) {
@@ -34,11 +34,15 @@ const Dashboard = ({ user: userProp, setUser, isLoading: parentLoading }) => {
           }
         } else {
           // No session found, redirect to login
-          console.log('Dashboard: No session found, redirecting to login');
+          console.log('⚠️ Dashboard: No session, redirecting to login');
           navigate('/login');
         }
       } catch (err) {
-        console.error("Dashboard: Session fetch error:", err);
+        if (err.response?.status === 401) {
+          console.log('ℹ️ Dashboard: Not authenticated, redirecting to login');
+        } else {
+          console.error('❌ Dashboard: Session error -', err.message);
+        }
         navigate('/login');
       }
     };
@@ -127,7 +131,7 @@ const Dashboard = ({ user: userProp, setUser, isLoading: parentLoading }) => {
   }, [user, showProfileModal]);
 
   const castVote = async (candidateId, candidateName) => {
-    console.log('Attempting to vote:', { candidateId, candidateName, currentHasVoted: hasVoted, user });
+    console.log('🗳️ Voting for:', candidateName);
     
     // Double-check voting status before making the API call
     if (hasVoted || user?.hasVoted) {
@@ -143,7 +147,7 @@ const Dashboard = ({ user: userProp, setUser, isLoading: parentLoading }) => {
       );
 
       if (res.data.success) {
-        console.log('Vote cast successfully');
+        console.log('✅ Vote cast successfully for', candidateName);
         confetti({
           particleCount: 150,
           spread: 70,
@@ -168,8 +172,8 @@ const Dashboard = ({ user: userProp, setUser, isLoading: parentLoading }) => {
         }
       }
     } catch (err) {
-      console.error('Vote error:', err);
-      alert(err.response?.data?.message || "Voting failed");
+      console.error('❌ Vote error:', err.response?.data?.message || err.message);
+      alert(err.response?.data?.message || "Voting failed. Please try again.");
     }
   };
 

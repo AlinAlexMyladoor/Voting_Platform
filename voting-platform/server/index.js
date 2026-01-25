@@ -117,20 +117,14 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 // --------------------
-// Debug Middleware (helps diagnose session issues)
+// Debug Middleware (reduced logging for production)
 // --------------------
 app.use((req, res, next) => {
-  // Only log API and auth requests to reduce noise
-  if (req.path.startsWith('/api') || req.path.startsWith('/auth')) {
-    console.log('📍 Request:', {
-      method: req.method,
-      path: req.path,
-      sessionID: req.sessionID,
-      hasSession: !!req.session,
-      isAuthenticated: req.isAuthenticated ? req.isAuthenticated() : false,
+  // Only log authentication-related requests
+  if (req.path.includes('/auth') || req.path.includes('/api/vote')) {
+    console.log(`📍 ${req.method} ${req.path}`, {
       hasUser: !!req.user,
-      userId: req.user?.id,
-      hasCookie: !!req.headers.cookie
+      userId: req.user?.id || 'guest'
     });
   }
   next();

@@ -12,22 +12,34 @@ function AppContent() {
   const [isLoading, setIsLoading] = useState(true);
   const location = useLocation();
 
-  // Fetch session whenever location changes (including after redirects)
+  // Fetch session only on routes that need authentication
   useEffect(() => {
     const fetchSession = async () => {
+      // Only fetch session if we're on dashboard or being redirected there
+      const needsAuth = location.pathname === '/dashboard';
+      
+      if (!needsAuth) {
+        setIsLoading(false);
+        return;
+      }
+
       try {
         setIsLoading(true);
-        console.log('App: Fetching session for route:', location.pathname);
         const res = await axios.get(`${API_URL}/auth/login/success`, { withCredentials: true });
         if (res.data && res.data.user) {
-          console.log('App: User session found:', res.data.user);
+          console.log('✅ User authenticated:', res.data.user.name);
           setUser(res.data.user);
         } else {
-          console.log('App: No user session found');
+          console.log('⚠️ No active session');
           setUser(null);
         }
       } catch (err) {
-        console.log('App: Session fetch failed:', err.message);
+        // 401 is expected when not logged in
+        if (err.response?.status === 401) {
+          console.log('ℹ️ Not logged in (expected)');
+        } else {
+          console.error('❌ Session check error:', err.message);
+        }
         setUser(null);
       } finally {
         setIsLoading(false);
