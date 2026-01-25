@@ -13,7 +13,7 @@ passport.deserializeUser((id, done) => {
 passport.use(new GoogleStrategy({
     clientID: process.env.GOOGLE_CLIENT_ID,
     clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-    callbackURL: "http://localhost:5000/auth/google/callback"
+    callbackURL: process.env.GOOGLE_CALLBACK_URL || "https://e-ballotserver.vercel.app/auth/google/callback"
   },
   async (accessToken, refreshToken, profile, done) => {
     try {
@@ -53,7 +53,7 @@ passport.use('linkedin', new OAuth2Strategy({
     tokenURL: 'https://www.linkedin.com/oauth/v2/accessToken',
     clientID: process.env.LINKEDIN_CLIENT_ID,
     clientSecret: process.env.LINKEDIN_CLIENT_SECRET,
-    callbackURL: "http://localhost:5000/auth/linkedin/callback",
+    callbackURL: process.env.LINKEDIN_CALLBACK_URL || "https://e-ballotserver.vercel.app/auth/linkedin/callback",
     scope: ['openid', 'profile', 'email', 'w_member_social'],
     state: true
   },

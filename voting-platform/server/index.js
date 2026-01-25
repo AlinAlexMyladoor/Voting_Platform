@@ -22,7 +22,7 @@ app.use(express.json()); // Parse JSON bodies
 
 app.use(
   cors({
-    origin: process.env.CLIENT_URL || "http://localhost:3000",
+    origin: process.env.CLIENT_URL || "https://e-ballot.vercel.app",
     credentials: true,
   })
 );
@@ -44,6 +44,7 @@ app.use(
         "connect-src": [
           "'self'",
           "http://localhost:5000",
+          "https://e-ballotserver.vercel.app",
           "https://*.vercel.app",
           "https://*.linkedin.com",
           "https://*.google.com",
