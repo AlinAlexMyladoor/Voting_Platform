@@ -307,11 +307,32 @@ router.post('/reset-password', async (req, res) => {
 // ====================
 // Auth Status
 // ====================
-router.get('/login/success', (req, res) => {
+router.get('/login/success', async (req, res) => {
   if (req.user) {
-    return res.json({ success: true, user: req.user });
+    try {
+      // Fetch the latest user data from database to ensure hasVoted is current
+      const freshUser = await User.findById(req.user.id);
+      if (freshUser) {
+        return res.json({ 
+          success: true, 
+          user: {
+            id: freshUser._id,
+            name: freshUser.name,
+            email: freshUser.email,
+            provider: freshUser.provider,
+            profilePicture: freshUser.profilePicture,
+            linkedin: freshUser.linkedin,
+            hasVoted: freshUser.hasVoted,
+            votedAt: freshUser.votedAt,
+            votedFor: freshUser.votedFor
+          }
+        });
+      }
+    } catch (err) {
+      console.error("Error fetching fresh user data:", err);
+    }
   }
-  res.status(401).json({ success: false });
+  res.status(401).json({ success: false, message: "Not authenticated" });
 });
 
 // ====================

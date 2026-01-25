@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import confetti from 'canvas-confetti';
 import './Dashboard.css';
@@ -6,16 +7,51 @@ import Plot from 'react-plotly.js';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
-const Dashboard = ({ user, setUser }) => {
+const Dashboard = ({ user: userProp, setUser, isLoading: parentLoading }) => {
+  const navigate = useNavigate();
+  const [user, setLocalUser] = useState(userProp);
   const [voters, setVoters] = useState([]);
   const [candidates, setCandidates] = useState([]);
-  const [hasVoted, setHasVoted] = useState(user?.hasVoted || false);
+  const [hasVoted, setHasVoted] = useState(false);
   const [votedCandidate, setVotedCandidate] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showVoterModal, setShowVoterModal] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [manualLinkedin, setManualLinkedin] = useState("");
   const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
+
+  // Fetch session independently to ensure user data is always fresh
+  useEffect(() => {
+    const fetchSession = async () => {
+      try {
+        const res = await axios.get(`${API_URL}/auth/login/success`, { withCredentials: true });
+        if (res.data && res.data.user) {
+          console.log('Dashboard: User session fetched successfully:', res.data.user);
+          setLocalUser(res.data.user);
+          setHasVoted(res.data.user.hasVoted || false);
+          if (setUser) {
+            setUser(res.data.user); // Update parent state too
+          }
+        } else {
+          // No session found, redirect to login
+          console.log('Dashboard: No session found, redirecting to login');
+          navigate('/login');
+        }
+      } catch (err) {
+        console.error("Dashboard: Session fetch error:", err);
+        navigate('/login');
+      }
+    };
+    fetchSession();
+  }, []); // Fetch on mount
+
+  // Update local user when prop changes
+  useEffect(() => {
+    if (userProp) {
+      setLocalUser(userProp);
+      setHasVoted(userProp.hasVoted || false);
+    }
+  }, [userProp]);
 
   const updateLinkedin = async () => {
     if (!manualLinkedin || !manualLinkedin.trim()) {
@@ -38,9 +74,11 @@ const Dashboard = ({ user, setUser }) => {
       
       if (response.data.success) {
         alert("LinkedIn Profile Updated Successfully!");
-       
+        // Update both local and parent user state
+        const updatedUser = { ...user, linkedin: manualLinkedin.trim() };
+        setLocalUser(updatedUser);
         if (setUser) {
-          setUser((prev) => ({ ...(prev || {}), linkedin: manualLinkedin.trim() }));
+          setUser(updatedUser);
         }
         setShowProfileModal(false);
         setManualLinkedin("");
@@ -56,8 +94,8 @@ const Dashboard = ({ user, setUser }) => {
     const loadData = async () => {
       try {
         const [candRes, voterRes] = await Promise.all([
-          axios.get(`${API_URL}/api/candidates`),
-          axios.get(`${API_URL}/api/voters`)
+          axios.get(`${API_URL}/api/candidates`, { withCredentials: true }),
+          axios.get(`${API_URL}/api/voters`, { withCredentials: true })
         ]);
         setCandidates(candRes.data);
         setVoters(voterRes.data);
@@ -70,9 +108,11 @@ const Dashboard = ({ user, setUser }) => {
     loadData();
   }, []);
 
- 
+  // Sync hasVoted state with local user state
   useEffect(() => {
-    setHasVoted(user?.hasVoted || false);
+    if (user) {
+      setHasVoted(user.hasVoted || false);
+    }
   }, [user]);
 
   
@@ -84,9 +124,17 @@ const Dashboard = ({ user, setUser }) => {
       }, 1500);
       return () => clearTimeout(timer);
     }
-  }, [user]);
+  }, [user, showProfileModal]);
 
   const castVote = async (candidateId, candidateName) => {
+    console.log('Attempting to vote:', { candidateId, candidateName, currentHasVoted: hasVoted, user });
+    
+    // Double-check voting status before making the API call
+    if (hasVoted || user?.hasVoted) {
+      alert("You have already cast your vote!");
+      return;
+    }
+
     try {
       const res = await axios.post(
         `${API_URL}/api/vote/${candidateId}`,
@@ -95,6 +143,7 @@ const Dashboard = ({ user, setUser }) => {
       );
 
       if (res.data.success) {
+        console.log('Vote cast successfully');
         confetti({
           particleCount: 150,
           spread: 70,
@@ -105,11 +154,21 @@ const Dashboard = ({ user, setUser }) => {
         setVoters(res.data.voters);
         setHasVoted(true);
         setVotedCandidate(candidateName);
+        
+        // Update both local and parent user state
+        const updatedUser = { 
+          ...user, 
+          hasVoted: true, 
+          votedAt: new Date().toISOString(), 
+          votedFor: candidateId 
+        };
+        setLocalUser(updatedUser);
         if (setUser) {
-          setUser((prev) => ({ ...(prev || {}), hasVoted: true, votedAt: new Date().toISOString(), votedFor: candidateId }));
+          setUser(updatedUser);
         }
       }
     } catch (err) {
+      console.error('Vote error:', err);
       alert(err.response?.data?.message || "Voting failed");
     }
   };
@@ -117,6 +176,24 @@ const Dashboard = ({ user, setUser }) => {
   const handleLogout = () => {
     window.location.href = `${API_URL}/auth/logout`;
   };
+
+  // Show loading state while fetching session
+  if (loading || parentLoading) {
+    return (
+      <div style={styles.container}>
+        <div style={styles.loadingCard}>
+          <div style={styles.spinner}></div>
+          <p style={{ marginTop: '20px', color: '#64748b' }}>Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Redirect to login if no user
+  if (!user) {
+    navigate('/login');
+    return null;
+  }
 
  
 if (votedCandidate) {
@@ -414,7 +491,9 @@ const styles = {
   editProfileBtn: { background: '#10b981', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', fontWeight: '600', fontSize: '0.9rem', marginLeft: '10px' },
   addProfileBtn: { background: '#f59e0b', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', fontWeight: '600', fontSize: '0.9rem', marginLeft: '10px' },
   profileInput: { width: '100%', padding: '12px', fontSize: '1rem', border: '2px solid #cbd5e1', borderRadius: '8px', marginBottom: '15px', boxSizing: 'border-box' },
-  updateBtn: { background: '#007bff', color: '#fff', border: 'none', padding: '12px 24px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', width: '100%', fontSize: '1rem' }
+  updateBtn: { background: '#007bff', color: '#fff', border: 'none', padding: '12px 24px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', width: '100%', fontSize: '1rem' },
+  loadingCard: { background: '#fff', padding: '50px', borderRadius: '30px', maxWidth: '400px', margin: '100px auto', boxShadow: '0 20px 25px rgba(0,0,0,0.1)', textAlign: 'center' },
+  spinner: { border: '4px solid #f3f4f6', borderTop: '4px solid #007bff', borderRadius: '50%', width: '50px', height: '50px', animation: 'spin 1s linear infinite', margin: '0 auto' }
 };
 
 export default Dashboard;

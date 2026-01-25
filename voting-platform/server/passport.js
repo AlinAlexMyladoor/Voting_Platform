@@ -5,8 +5,28 @@ const axios = require('axios');
 const User = require('./models/User');
 
 passport.serializeUser((user, done) => done(null, user.id));
-passport.deserializeUser((id, done) => {
-  User.findById(id).then(user => done(null, user));
+
+passport.deserializeUser(async (id, done) => {
+  try {
+    const user = await User.findById(id);
+    if (!user) {
+      return done(null, false);
+    }
+    // Return the full user object with all necessary fields
+    done(null, {
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      provider: user.provider,
+      profilePicture: user.profilePicture,
+      linkedin: user.linkedin,
+      hasVoted: user.hasVoted,
+      votedAt: user.votedAt,
+      votedFor: user.votedFor
+    });
+  } catch (err) {
+    done(err, null);
+  }
 });
 
 // --- GOOGLE STRATEGY ---

@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import Login from './Login';
@@ -6,28 +6,49 @@ import Dashboard from './Dashboard';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
-function App() {
+// Wrapper component to handle route-based session refresh
+function AppContent() {
   const [user, setUser] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const location = useLocation();
 
+  // Fetch session whenever location changes (including after redirects)
   useEffect(() => {
     const fetchSession = async () => {
       try {
+        setIsLoading(true);
+        console.log('App: Fetching session for route:', location.pathname);
         const res = await axios.get(`${API_URL}/auth/login/success`, { withCredentials: true });
-        if (res.data && res.data.user) setUser(res.data.user);
+        if (res.data && res.data.user) {
+          console.log('App: User session found:', res.data.user);
+          setUser(res.data.user);
+        } else {
+          console.log('App: No user session found');
+          setUser(null);
+        }
       } catch (err) {
-      
+        console.log('App: Session fetch failed:', err.message);
+        setUser(null);
+      } finally {
+        setIsLoading(false);
       }
     };
     fetchSession();
-  }, []);
+  }, [location.pathname]); // Re-fetch when route changes
 
   return (
+    <Routes>
+      <Route path="/login" element={<Login />} />
+      <Route path="/dashboard" element={<Dashboard user={user} setUser={setUser} isLoading={isLoading} />} />
+      <Route path="/" element={<Login />} />
+    </Routes>
+  );
+}
+
+function App() {
+  return (
     <BrowserRouter>
-      <Routes>
-        <Route path="/login" element={<Login />} />
-        <Route path="/dashboard" element={<Dashboard user={user} setUser={setUser} />} />
-        <Route path="/" element={<Login />} />
-      </Routes>
+      <AppContent />
     </BrowserRouter>
   );
 }
