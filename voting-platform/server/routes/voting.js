@@ -6,18 +6,28 @@ const Candidate = require("../models/Candidate");
 const isAuthenticated = (req, res, next) => {
   const isAuth = req.isAuthenticated && req.isAuthenticated();
   const hasUser = !!req.user;
+  const hasSession = !!req.session;
+  const sessionID = req.sessionID;
   
   console.log('🔐 Auth check:', {
     path: req.path,
     authenticated: isAuth || hasUser,
-    userId: req.user?.id || 'none'
+    userId: req.user?.id || 'none',
+    hasSession,
+    sessionID: sessionID ? sessionID.substring(0, 10) + '...' : 'none',
+    cookies: Object.keys(req.cookies || {}).length > 0 ? 'present' : 'missing'
   });
   
   if (isAuth || hasUser) {
     return next();
   }
   
-  console.log('❌ Authentication required for:', req.path);
+  console.log('❌ Authentication failed:', {
+    isAuthenticated: isAuth,
+    hasUser,
+    hasSession,
+    sessionID: sessionID ? 'exists' : 'missing'
+  });
   return res.status(401).json({ message: "Please login to continue" });
 };
 
@@ -118,8 +128,20 @@ router.post("/vote/:candidateId", isAuthenticated, async (req, res) => {
     const userId = req.user.id;
     const { candidateId } = req.params;
 
+    console.log('🗳️ Vote request received:', {
+      userId,
+      candidateId,
+      userName: req.user?.name
+    });
+
     const user = await User.findById(userId);
+    if (!user) {
+      console.log('❌ User not found:', userId);
+      return res.status(404).json({ message: "User not found" });
+    }
+
     if (user.hasVoted) {
+      console.log('⚠️ User already voted:', userId);
       return res.status(400).json({ message: "You have already cast your vote!" });
     }
 
@@ -159,6 +181,16 @@ router.post("/vote/:candidateId", isAuthenticated, async (req, res) => {
       linkedin: u.linkedin || '' // Return actual LinkedIn URL
     }));
 
+    console.log('✅ Vote recorded successfully for:', req.user?.name);
+
+    // Touch session to keep it alive and save it
+    if (req.session) {
+      req.session.touch();
+      req.session.save((err) => {
+        if (err) console.error('Session save warning:', err);
+      });
+    }
+
     res.status(200).json({ 
       success: true, 
       candidates: normalized,
@@ -166,7 +198,7 @@ router.post("/vote/:candidateId", isAuthenticated, async (req, res) => {
     });
 
   } catch (err) {
-    console.error("Voting Error:", err);
+    console.error("❌ Voting Error:", err);
     res.status(500).json({ message: "Internal Server Error" });
   }
 });

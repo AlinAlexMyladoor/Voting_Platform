@@ -7,6 +7,9 @@ import Plot from 'react-plotly.js';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
+// Configure axios to always send credentials
+axios.defaults.withCredentials = true;
+
 const Dashboard = ({ user: userProp, setUser }) => {
   const navigate = useNavigate();
   const [user, setLocalUser] = useState(null);

@@ -107,13 +107,13 @@ try {
   app.use(
     session({
       secret: process.env.SESSION_SECRET || "secret_key",
-      resave: false,
+      resave: true, // Force session save on every request (was false)
       saveUninitialized: false,
       store: MongoStore.create({
         mongoUrl: process.env.MONGO_URI,
         ttl: 24 * 60 * 60, // Session TTL in seconds (24 hours)
         autoRemove: 'native', // Use MongoDB's TTL feature
-        touchAfter: 0, // Update session immediately (was 24 * 3600)
+        touchAfter: 0, // Update session immediately
       }),
       cookie: {
         secure: true, // Always true for production (Vercel uses HTTPS)
