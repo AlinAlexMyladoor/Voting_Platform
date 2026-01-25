@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import './Login.css';
 
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+const CLIENT_URL = window.location.origin;
+
 const Login = () => {
   const [currentView, setCurrentView] = useState('oauth'); // 'oauth', 'login', 'register', 'forgot', 'reset'
   const [loginData, setLoginData] = useState({
@@ -36,7 +39,7 @@ const Login = () => {
   }, []);
 
   const handleOAuthLogin = (provider) => {
-    window.open(`http://localhost:5000/auth/${provider}`, "_self");
+    window.open(`${API_URL}/auth/${provider}`, "_self");
   };
 
   // Login form handlers
@@ -61,7 +64,7 @@ const Login = () => {
 
     setIsLoading(true);
     try {
-      const response = await fetch('http://localhost:5000/auth/login', {
+      const response = await fetch(`${API_URL}/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -82,7 +85,7 @@ const Login = () => {
 
       setSuccess('Login successful! Redirecting...');
       setTimeout(() => {
-        window.location.href = 'http://localhost:3000/dashboard';
+        window.location.href = `${CLIENT_URL}/dashboard`;
       }, 1000);
     } catch (error) {
       setError('An error occurred. Please try again.');
@@ -131,7 +134,7 @@ const Login = () => {
 
     setIsLoading(true);
     try {
-      const response = await fetch('http://localhost:5000/auth/register', {
+      const response = await fetch(`${API_URL}/auth/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -188,7 +191,7 @@ const Login = () => {
 
     setIsLoading(true);
     try {
-      const response = await fetch('http://localhost:5000/auth/forgot-password', {
+      const response = await fetch(`${API_URL}/auth/forgot-password`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -249,7 +252,7 @@ const Login = () => {
 
     setIsLoading(true);
     try {
-      const response = await fetch('http://localhost:5000/auth/reset-password', {
+      const response = await fetch(`${API_URL}/auth/reset-password`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

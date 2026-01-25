@@ -4,6 +4,8 @@ import confetti from 'canvas-confetti';
 import './Dashboard.css';
 import Plot from 'react-plotly.js';
 
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+
 const Dashboard = ({ user, setUser }) => {
   const [voters, setVoters] = useState([]);
   const [candidates, setCandidates] = useState([]);
@@ -29,7 +31,7 @@ const Dashboard = ({ user, setUser }) => {
     setIsUpdatingProfile(true);
     try {
       const response = await axios.post(
-        "http://localhost:5000/api/update-linkedin", 
+        `${API_URL}/api/update-linkedin`, 
         { url: manualLinkedin }, 
         { withCredentials: true }
       );
@@ -54,8 +56,8 @@ const Dashboard = ({ user, setUser }) => {
     const loadData = async () => {
       try {
         const [candRes, voterRes] = await Promise.all([
-          axios.get("http://localhost:5000/api/candidates"),
-          axios.get("http://localhost:5000/api/voters")
+          axios.get(`${API_URL}/api/candidates`),
+          axios.get(`${API_URL}/api/voters`)
         ]);
         setCandidates(candRes.data);
         setVoters(voterRes.data);
@@ -87,7 +89,7 @@ const Dashboard = ({ user, setUser }) => {
   const castVote = async (candidateId, candidateName) => {
     try {
       const res = await axios.post(
-        `http://localhost:5000/api/vote/${candidateId}`,
+        `${API_URL}/api/vote/${candidateId}`,
         {},
         { withCredentials: true }
       );
@@ -113,7 +115,7 @@ const Dashboard = ({ user, setUser }) => {
   };
 
   const handleLogout = () => {
-    window.location.href = "http://localhost:5000/auth/logout";
+    window.location.href = `${API_URL}/auth/logout`;
   };
 
  

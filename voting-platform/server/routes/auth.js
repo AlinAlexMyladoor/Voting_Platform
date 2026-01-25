@@ -45,10 +45,10 @@ router.get('/google',
 router.get(
   '/google/callback',
   passport.authenticate('google', {
-    failureRedirect: 'http://localhost:3000/login',
+    failureRedirect: `${process.env.CLIENT_URL || 'http://localhost:3000'}/login`,
   }),
   (req, res) => {
-    res.redirect('http://localhost:3000/dashboard');
+    res.redirect(`${process.env.CLIENT_URL || 'http://localhost:3000'}/dashboard`);
   }
 );
 
@@ -65,10 +65,10 @@ router.get(
 router.get(
   '/linkedin/callback',
   passport.authenticate('linkedin', {
-    failureRedirect: 'http://localhost:3000/login',
+    failureRedirect: `${process.env.CLIENT_URL || 'http://localhost:3000'}/login`,
   }),
   (req, res) => {
-    res.redirect('http://localhost:3000/dashboard');
+    res.redirect(`${process.env.CLIENT_URL || 'http://localhost:3000'}/dashboard`);
   }
 );
 
@@ -180,7 +180,7 @@ router.post('/forgot-password', async (req, res) => {
     user.resetPasswordExpires = Date.now() + 3600000; // 1 hour
     await user.save();
 
-    const resetUrl = `http://localhost:3000/login?resetToken=${token}`;
+    const resetUrl = `${process.env.CLIENT_URL || 'http://localhost:3000'}/login?resetToken=${token}`;
 
     // Check if email credentials are configured
     if (!process.env.EMAIL_USER || !process.env.EMAIL_PASSWORD) {
@@ -323,7 +323,7 @@ router.get('/logout', (req, res, next) => {
 
     req.session.destroy(() => {
       res.clearCookie('connect.sid');
-      res.redirect('http://localhost:3000/');
+      res.redirect(`${process.env.CLIENT_URL || 'http://localhost:3000'}/`);
     });
   });
 });

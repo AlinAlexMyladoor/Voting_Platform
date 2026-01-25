@@ -22,7 +22,7 @@ app.use(express.json()); // Parse JSON bodies
 
 app.use(
   cors({
-    origin: "http://localhost:3000",
+    origin: process.env.CLIENT_URL || "http://localhost:3000",
     credentials: true,
   })
 );
@@ -44,6 +44,7 @@ app.use(
         "connect-src": [
           "'self'",
           "http://localhost:5000",
+          "https://*.vercel.app",
           "https://*.linkedin.com",
           "https://*.google.com",
         ],
@@ -74,6 +75,11 @@ app.use(
     secret: process.env.SESSION_SECRET || "secret_key",
     resave: false,
     saveUninitialized: false,
+    cookie: {
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+      maxAge: 24 * 60 * 60 * 1000 // 24 hours
+    }
   })
 );
 
