@@ -1,0 +1,550 @@
+╔═══════════════════════════════════════════════════════════════════════════╗
+║                    VOTING PLATFORM ARCHITECTURE                          ║
+║                       Updated January 22, 2026                           ║
+╚═══════════════════════════════════════════════════════════════════════════╝
+
+
+1. VOTE STATUS FEATURE
+═══════════════════════════════════════════════════════════════════════════
+
+    FRONTEND                          BACKEND
+    ════════════════════════════════════════════════════════════════════
+
+    Dashboard.js
+    ├─ Component State
+    │  ├─ hasVoted: boolean
+    │  └─ votedCandidate: string
+    │
+    ├─ Render Logic
+    │  └─ IF hasVoted === true
+    │     └─ Show: ✅ Voted Already (GREEN BADGE)
+    │
+    └─ Hide Vote Button
+       └─ Vote buttons only show if hasVoted === false
+
+
+    USER FLOW:
+    ┌─────────┐      ┌──────────────┐      ┌────────────────┐      ┌──────────┐
+    │  Login  │  →   │  Dashboard   │  →   │  Click Vote    │  →   │ Voted!   │
+    └─────────┘      └──────────────┘      └────────────────┘      └──────────┘
+    hasVoted: false  hasVoted: false      Cast Vote Mutation      hasVoted: true
+                                                                   Show Badge
+
+
+2. FORGOT PASSWORD FEATURE
+═══════════════════════════════════════════════════════════════════════════
+
+    FRONTEND (LOGIN.JS)
+    ───────────────────────────────────────────────────────────────────
+
+    Login Views:
+    ┌──────────────┐
+    │ OAuth View   │  → Sign with Google
+    │              │  → Sign with LinkedIn
+    │              │  → Sign in with Email
+    └──────────────┘
+              ↓
+    ┌──────────────────────────┐
+    │ Email/Password Login     │
+    │ ├─ Email input           │
+    │ ├─ Password input        │  → Login
+    │ └─ Forgot Password?      │
+    └──────────────────────────┘
+              ↓
+    ┌──────────────────────────┐
+    │ Forgot Password View     │
+    │ ├─ Email input           │  → Send Reset Link
+    │ └─ Success message       │
+    └──────────────────────────┘
+              ↓
+    ┌──────────────────────────┐
+    │ Reset Password View      │
+    │ ├─ New password input    │  → Reset Password
+    │ ├─ Confirm password      │
+    │ └─ Success message       │
+    └──────────────────────────┘
+
+
+    BACKEND (AUTH.JS)
+    ───────────────────────────────────────────────────────────────────
+
+    POST /auth/forgot-password
+    ├─ Validate email exists
+    ├─ Generate JWT token (1 hour expiry)
+    ├─ Save token to User.resetToken
+    ├─ Send email with reset link
+    └─ Return: Success message
+
+    POST /auth/reset-password
+    ├─ Validate JWT token
+    ├─ Check token expiry
+    ├─ Verify password (6+ chars)
+    ├─ Hash new password with bcryptjs
+    ├─ Update User.password
+    ├─ Clear User.resetToken
+    └─ Return: Success message
+
+
+    EMAIL SERVICE (NODEMAILER)
+    ───────────────────────────────────────────────────────────────────
+
+    SMTP Configuration
+    ├─ Provider: Gmail / Outlook / SendGrid
+    ├─ Port: 587 (TLS) or 465 (SSL)
+    ├─ Auth: EMAIL_USER + EMAIL_PASSWORD
+    └─ Security: Credentials from environment variables
+
+    Email Template
+    ├─ Subject: "Password Reset Request"
+    ├─ Body: HTML formatted with reset link
+    ├─ Link: http://localhost:3000/login?resetToken={JWT}
+    ├─ Expiry: "This link expires in 1 hour"
+    └─ Footer: "If you didn't request this, ignore this email"
+
+
+    DATABASE (MONGODB)
+    ───────────────────────────────────────────────────────────────────
+
+    User Schema
+    ├─ name: String
+    ├─ email: String (unique)
+    ├─ password: String (hashed with bcryptjs)
+    ├─ hasVoted: Boolean
+    ├─ resetToken: String          ← NEW
+    ├─ resetTokenExpiry: Date      ← NEW
+    └─ timestamps: createdAt, updatedAt
+
+
+3. COMPLETE USER FLOWS
+═══════════════════════════════════════════════════════════════════════════
+
+    FLOW A: VOTING & VOTE STATUS
+    ────────────────────────────────────────────────────────────────
+
+    1. User logs in
+       └─ Dashboard loads with hasVoted = false
+
+    2. User sees candidate cards
+       └─ Each card shows [Vote for Name] button
+
+    3. User clicks vote button
+       └─ Makes POST request to /api/vote/{candidateId}
+
+    4. Server processes vote
+       └─ Updates hasVoted = true
+       └─ Returns updated candidates list
+
+    5. Frontend updates state
+       └─ hasVoted = true
+
+    6. Cards re-render
+       └─ Vote buttons hidden
+       └─ Shows: ✅ Voted Already (GREEN BADGE)
+
+    7. User can't vote again
+       └─ Badge prevents accidental duplicate vote
+
+
+    FLOW B: FORGOT PASSWORD COMPLETE JOURNEY
+    ────────────────────────────────────────────────────────────────
+
+    STEP 1: REQUEST PASSWORD RESET
+    ──────────────────────────────
+    1. User at login page
+    2. Clicks "Sign in with Email"
+    3. Clicks "Forgot Password?"
+    4. Enters email address
+    5. Clicks "Send Reset Link"
+       └─ Frontend validates email is not empty
+       └─ Sends POST to /auth/forgot-password with email
+       └─ Shows loading state
+
+    Server processes request:
+    ├─ Finds user by email
+    ├─ If user not found: Returns generic success (security)
+    ├─ If user found:
+    │  ├─ Generates JWT token (userId, 1 hour expiry)
+    │  ├─ Saves token to User.resetToken
+    │  ├─ Sets User.resetTokenExpiry = now + 1 hour
+    │  ├─ Calls nodemailer transporter.sendMail()
+    │  └─ Email sent successfully
+    └─ Returns success message
+
+    User sees:
+    └─ "Password reset link sent to your email!"
+    └─ Redirects back to login in 3 seconds
+
+
+    STEP 2: RECEIVE EMAIL
+    ────────────────────────────────
+    Email received in inbox:
+
+    From: your_email@gmail.com
+    Subject: Password Reset Request
+
+    ┌─────────────────────────────────────────────────────────┐
+    │                                                         │
+    │  Password Reset Request                                 │
+    │                                                         │
+    │  You requested a password reset. Click the link        │
+    │  below to reset your password:                         │
+    │                                                         │
+    │  ┌─────────────────────────────────────┐              │
+    │  │ Reset Password (clickable button)    │              │
+    │  └─────────────────────────────────────┘              │
+    │                                                         │
+    │  Or copy this link:                                     │
+    │  http://localhost:3000/login?resetToken=eyJhbG...    │
+    │                                                         │
+    │  This link will expire in 1 hour.                       │
+    │                                                         │
+    └─────────────────────────────────────────────────────────┘
+
+
+    STEP 3: CLICK RESET LINK
+    ────────────────────────────────
+    1. User clicks email link
+    2. Browser goes to:
+       http://localhost:3000/login?resetToken=eyJhbG...
+    3. Login component detects URL parameter
+    4. useEffect hook extracts resetToken from URL
+    5. setCurrentView('reset')
+    6. Reset password form appears automatically
+
+
+    STEP 4: RESET PASSWORD
+    ────────────────────────────────
+    User sees form:
+    ┌──────────────────────────┐
+    │ Set New Password         │
+    ├──────────────────────────┤
+    │ New Password: [_______]  │
+    │ Confirm Password: [____] │
+    │                          │
+    │ [Reset Password]         │
+    └──────────────────────────┘
+
+    User:
+    1. Enters new password (e.g., "newpass123")
+    2. Confirms password (same value)
+    3. Clicks "Reset Password"
+       └─ Frontend validates:
+          ├─ Password is not empty
+          ├─ Password is 6+ characters
+          ├─ Passwords match
+       └─ Sends POST to /auth/reset-password with token + password
+
+    Server processes:
+    ├─ Verifies JWT token is valid
+    ├─ Checks token hasn't expired (within 1 hour)
+    ├─ Finds user by decoded userId from token
+    ├─ Verifies user.resetToken matches token
+    ├─ Checks token expiry date > now
+    ├─ Hashes new password: bcryptjs.hash(password, 10)
+    ├─ Updates user.password = hashedPassword
+    ├─ Clears user.resetToken = null
+    ├─ Clears user.resetTokenExpiry = null
+    ├─ Saves user to database
+    └─ Returns: "Password reset successful"
+
+
+    STEP 5: SUCCESS & REDIRECT
+    ────────────────────────────────
+    1. User sees: "Password reset successful! Redirecting..."
+    2. After 2 seconds, redirects to login page
+    3. User logs in with:
+       └─ Email: user@example.com
+       └─ Password: newpass123 (NEW)
+    4. Login successful!
+    5. Redirected to dashboard
+
+
+4. SECURITY ARCHITECTURE
+═══════════════════════════════════════════════════════════════════════════
+
+    PASSWORD SECURITY
+    ──────────────────
+    Registration/Reset:
+    1. User enters password (plain text)
+    2. bcryptjs.hash(password, 10)  ← 10 salt rounds
+    3. Hashed password stored in database
+    4. Plain text discarded from memory
+
+    Login:
+    1. User enters password (plain text)
+    2. bcryptjs.compare(input, storedHash)
+    3. Returns true/false
+    4. Plain text discarded from memory
+
+    Reset:
+    1. Token issued with expiry
+    2. User enters new password
+    3. Old password completely replaced
+    4. Reset token destroyed after use
+
+
+    TOKEN SECURITY
+    ──────────────
+    JWT Token Generation:
+    ├─ Payload: { userId }
+    ├─ Secret: JWT_SECRET from environment
+    ├─ Expiry: 1 hour
+    └─ Algorithm: HS256
+
+    Token Validation:
+    ├─ Signature verified using JWT_SECRET
+    ├─ Expiry checked: token time < current time
+    ├─ Single use: token cleared after password reset
+    └─ No token reuse possible
+
+
+    EMAIL SECURITY
+    ───────────────
+    ├─ Credentials in environment variables (.env)
+    ├─ No hardcoded passwords
+    ├─ SMTP uses TLS (port 587) or SSL (port 465)
+    ├─ Sensitive data not logged
+    └─ Email header validation prevents spoofing
+
+
+5. DATA FLOW DIAGRAM
+═══════════════════════════════════════════════════════════════════════════
+
+    FORGOT PASSWORD DATA FLOW
+    ──────────────────────────
+
+                        USER
+                         │
+                         ↓
+                   [Login Page]
+                         │
+                 ┌───────┴─────────┐
+                 ↓                 ↓
+            "Sign with          "Forgot
+             Email"            Password"
+                 │                 │
+                 ├─────────────────┤
+                 ↓
+          [Email Input Form]
+                 │
+                 ↓
+          [Send Reset Link]
+                 │
+         ┌───────┴─────────────────────────┐
+         ↓                                  ↓
+    FRONTEND                           BACKEND
+         │                                  │
+         ├─ Validate email         ┌─ Query User by email
+         │                         │
+         ├─ Show loading           ├─ Generate JWT token
+         │                         │
+         ├─ Disable button         ├─ Save token to DB
+         │                         │
+         └─ POST request           ├─ Create email
+                                   │
+                                   ├─ Send via Nodemailer
+                                   │
+                                   └─ Return success
+                                      │
+                                      ↓
+                                  [Email Sent]
+                                      │
+                                      ↓
+                                    USER
+                                      │
+                                      ↓
+                                [Check Email]
+                                      │
+                                      ↓
+                                [Click Link]
+                                      │
+                                      ↓
+                                  [Browser]
+                                      │
+                                      ↓
+                            [Extract resetToken]
+                                      │
+                                      ↓
+                              [Show Reset Form]
+                                      │
+                                      ↓
+                            [Enter New Password]
+                                      │
+                    ┌──────────────────┴──────────────────┐
+                    ↓                                      ↓
+                FRONTEND                              BACKEND
+                    │                                      │
+                ├─ Validate password         ┌─ Verify token
+                │                            │
+                ├─ Show loading              ├─ Check expiry
+                │                            │
+                ├─ Disable button            ├─ Hash password
+                │                            │
+                └─ POST request              ├─ Update User
+                                             │
+                                             ├─ Clear token
+                                             │
+                                             └─ Return success
+                                                │
+                                                ↓
+                                          [Success Page]
+                                                │
+                                                ↓
+                                        [Redirect to Login]
+                                                │
+                                                ↓
+                                          [User Can Login]
+                                         With New Password
+
+
+6. FILES AND THEIR RELATIONSHIPS
+═══════════════════════════════════════════════════════════════════════════
+
+    CLIENT SIDE
+    ───────────────────────────────────────────────────────────────
+    
+    App.js
+      └─ Renders: Login OR Dashboard
+         └─ If user logged in → Dashboard
+         └─ If user not logged in → Login
+
+    Login.js (595 lines)
+      ├─ State Management
+      │  ├─ currentView: 'oauth' | 'login' | 'register' | 'forgot' | 'reset'
+      │  ├─ loginData: { email, password }
+      │  ├─ registerData: { name, email, password, confirmPassword }
+      │  ├─ forgotData: { email }
+      │  ├─ resetData: { password, confirmPassword }
+      │  ├─ resetToken: string
+      │  └─ error, success, isLoading
+      │
+      ├─ Handlers
+      │  ├─ handleOAuthLogin()
+      │  ├─ handleLoginChange()
+      │  ├─ handleLoginSubmit() → POST /auth/login
+      │  ├─ handleRegisterChange()
+      │  ├─ handleRegisterSubmit() → POST /auth/register
+      │  ├─ handleForgotChange()
+      │  ├─ handleForgotSubmit() → POST /auth/forgot-password
+      │  ├─ handleResetChange()
+      │  └─ handleResetSubmit() → POST /auth/reset-password
+      │
+      ├─ Views (conditional rendering)
+      │  ├─ OAuth View
+      │  ├─ Login View
+      │  ├─ Register View
+      │  ├─ Forgot View
+      │  └─ Reset View
+      │
+      └─ Effects
+         └─ useEffect: Extract resetToken from URL on mount
+
+    Login.css (265+ lines)
+      ├─ OAuth buttons
+      ├─ Form styling
+      ├─ Input validation states
+      ├─ Error messages (red)
+      ├─ Success messages (green)
+      ├─ Link buttons
+      └─ Responsive design
+
+    Dashboard.js (239 lines)
+      ├─ State Management
+      │  ├─ hasVoted: boolean
+      │  └─ votedCandidate: string
+      │
+      ├─ Vote Status Display
+      │  ├─ IF hasVoted === false → [Vote for Name] button
+      │  └─ IF hasVoted === true → ✅ Voted Already (GREEN BADGE)
+      │
+      └─ Styling
+         ├─ votedAlreadyLabel (NEW)
+         │  ├─ Color: #16a34a (green)
+         │  ├─ Background: #f0fdf4 (light green)
+         │  ├─ Border: 2px solid #16a34a
+         │  └─ Display: flex with gap
+
+
+    SERVER SIDE
+    ───────────────────────────────────────────────────────────────
+
+    auth.js (277 lines)
+      ├─ Nodemailer Setup
+      │  └─ transporter = createTransport(SMTP config)
+      │
+      ├─ OAuth Routes
+      │  ├─ GET /auth/google
+      │  ├─ GET /auth/google/callback
+      │  ├─ GET /auth/linkedin
+      │  └─ GET /auth/linkedin/callback
+      │
+      ├─ Authentication Routes
+      │  ├─ POST /auth/register
+      │  └─ POST /auth/login
+      │
+      ├─ Password Reset Routes (NEW)
+      │  ├─ POST /auth/forgot-password
+      │  │  ├─ Validate email
+      │  │  ├─ Generate JWT token
+      │  │  ├─ Save token to DB
+      │  │  └─ Send email
+      │  │
+      │  └─ POST /auth/reset-password
+      │     ├─ Verify JWT token
+      │     ├─ Hash new password
+      │     ├─ Update DB
+      │     └─ Clear token
+      │
+      ├─ Session Routes
+      │  ├─ GET /auth/login/success
+      │  └─ GET /auth/logout
+      │
+      └─ Error Handling
+         └─ Try-catch blocks with user-friendly messages
+
+    User.js (45 lines)
+      ├─ Basic Fields
+      │  ├─ name: String
+      │  ├─ email: String (unique)
+      │  └─ password: String
+      │
+      ├─ OAuth Fields
+      │  ├─ provider: String
+      │  └─ providerId: String
+      │
+      ├─ Voting Fields
+      │  └─ hasVoted: Boolean
+      │
+      ├─ Password Reset Fields (NEW)
+      │  ├─ resetToken: String
+      │  └─ resetTokenExpiry: Date
+      │
+      └─ Metadata
+         └─ timestamps: createdAt, updatedAt
+
+    .env
+      ├─ Database
+      │  └─ MONGO_URI
+      │
+      ├─ Server
+      │  ├─ PORT
+      │  └─ SESSION_SECRET
+      │
+      ├─ OAuth
+      │  ├─ GOOGLE_CLIENT_ID
+      │  ├─ GOOGLE_CLIENT_SECRET
+      │  ├─ LINKEDIN_CLIENT_ID
+      │  └─ LINKEDIN_CLIENT_SECRET
+      │
+      ├─ Email (NEW)
+      │  ├─ EMAIL_HOST
+      │  ├─ EMAIL_PORT
+      │  ├─ EMAIL_USER
+      │  └─ EMAIL_PASSWORD
+      │
+      └─ Security (NEW)
+         └─ JWT_SECRET
+
+
+═══════════════════════════════════════════════════════════════════════════
+End of Architecture Documentation
