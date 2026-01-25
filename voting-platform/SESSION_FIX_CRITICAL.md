@@ -182,10 +182,12 @@ You should see logs like:
 
 Ensure `MONGO_URI` and `SESSION_SECRET` are set in Vercel:
 
+```bash
+MONGO_URI=<your-mongodb-connection-string-here>
+SESSION_SECRET=<your-secret-key-at-least-32-characters>
 ```
-MONGO_URI=mongodb+srv://user:pass@cluster.mongodb.net/votingdb
-SESSION_SECRET=your-super-secret-key-min-32-chars
-```
+
+**Note:** Never commit actual credentials. Use Vercel's environment variables dashboard.
 
 ## What Happens Now
 

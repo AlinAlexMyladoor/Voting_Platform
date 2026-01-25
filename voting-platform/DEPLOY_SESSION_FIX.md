@@ -70,11 +70,13 @@ Login → Username shows → Click Vote → Success! ✅
 
 Ensure these are in Vercel → Your Project → Settings → Environment Variables:
 
-```
-MONGO_URI=mongodb+srv://...your-connection-string...
-SESSION_SECRET=your-secret-key-at-least-32-characters
+```bash
+MONGO_URI=<your-mongodb-connection-string>
+SESSION_SECRET=<your-secret-key-minimum-32-chars>
 CLIENT_URL=https://your-frontend.vercel.app
 ```
+
+**Important:** Set these in Vercel dashboard, never commit actual credentials to Git.
 
 ## What Changed
 
