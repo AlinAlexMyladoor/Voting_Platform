@@ -48,7 +48,13 @@ router.get(
     failureRedirect: `${process.env.CLIENT_URL || 'http://localhost:3000'}/login`,
   }),
   (req, res) => {
-    res.redirect(`${process.env.CLIENT_URL || 'http://localhost:3000'}/dashboard`);
+    // Explicitly save session before redirect to ensure it's persisted
+    req.session.save((err) => {
+      if (err) {
+        console.error('Session save error:', err);
+      }
+      res.redirect(`${process.env.CLIENT_URL || 'http://localhost:3000'}/dashboard`);
+    });
   }
 );
 
@@ -68,7 +74,13 @@ router.get(
     failureRedirect: `${process.env.CLIENT_URL || 'http://localhost:3000'}/login`,
   }),
   (req, res) => {
-    res.redirect(`${process.env.CLIENT_URL || 'http://localhost:3000'}/dashboard`);
+    // Explicitly save session before redirect to ensure it's persisted
+    req.session.save((err) => {
+      if (err) {
+        console.error('Session save error:', err);
+      }
+      res.redirect(`${process.env.CLIENT_URL || 'http://localhost:3000'}/dashboard`);
+    });
   }
 );
 
@@ -138,7 +150,14 @@ router.post('/login', async (req, res) => {
       if (err) {
         return res.status(500).json({ message: 'Login failed' });
       }
-      res.json({ message: 'Login successful', user });
+      // Explicitly save session to ensure it's persisted
+      req.session.save((saveErr) => {
+        if (saveErr) {
+          console.error('Session save error:', saveErr);
+          return res.status(500).json({ message: 'Session error' });
+        }
+        res.json({ message: 'Login successful', user });
+      });
     });
   } catch (err) {
     res.status(500).json({ message: 'Login error' });

@@ -39,7 +39,8 @@ const Login = () => {
   }, []);
 
   const handleOAuthLogin = (provider) => {
-    window.open(`${API_URL}/auth/${provider}`, "_self");
+    // Use window.location.href instead of window.open for better reliability
+    window.location.href = `${API_URL}/auth/${provider}`;
   };
 
   // Login form handlers

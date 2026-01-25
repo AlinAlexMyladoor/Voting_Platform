@@ -82,7 +82,7 @@ try {
         mongoUrl: process.env.MONGO_URI,
         ttl: 24 * 60 * 60, // Session TTL in seconds (24 hours)
         autoRemove: 'native', // Use MongoDB's TTL feature
-        touchAfter: 24 * 3600, // Lazy session update
+        touchAfter: 0, // Update session immediately (was 24 * 3600)
       }),
       cookie: {
         secure: true, // Always true for production (Vercel uses HTTPS)
