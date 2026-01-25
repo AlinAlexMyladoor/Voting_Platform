@@ -20,19 +20,24 @@ let isConnected = false;
 
 const connectDB = async () => {
   if (isConnected) {
-    console.log('Using existing MongoDB connection');
+    console.log('♻️ Using existing MongoDB connection');
     return;
   }
 
   try {
     const db = await mongoose.connect(process.env.MONGO_URI, {
-      serverSelectionTimeoutMS: 5000,
+      serverSelectionTimeoutMS: 10000, // Increased from 5s to 10s
       socketTimeoutMS: 45000,
+      maxPoolSize: 10, // Connection pool size
+      minPoolSize: 2,  // Minimum connections
+      retryWrites: true,
+      retryReads: true,
     });
     isConnected = db.connections[0].readyState === 1;
     console.log('✅ MongoDB connected successfully');
   } catch (error) {
     console.error('❌ MongoDB connection failed:', error.message);
+    isConnected = false; // Ensure flag is reset on failure
     throw error;
   }
 };
@@ -154,6 +159,11 @@ app.use(async (req, res, next) => {
   // Ensure MongoDB is connected for all routes (except health check)
   if (req.path !== '/') {
     try {
+      // Check if connection is alive
+      if (mongoose.connection.readyState !== 1) {
+        console.log('⚠️ MongoDB disconnected, reconnecting...');
+        isConnected = false;
+      }
       await connectDB();
     } catch (error) {
       console.error('❌ MongoDB not available:', error.message);
@@ -168,7 +178,8 @@ app.use(async (req, res, next) => {
   if (req.path.includes('/auth') || req.path.includes('/api/vote')) {
     console.log(`📍 ${req.method} ${req.path}`, {
       hasUser: !!req.user,
-      userId: req.user?.id || 'guest'
+      userId: req.user?.id || 'guest',
+      dbState: mongoose.connection.readyState // 0=disconnected, 1=connected, 2=connecting, 3=disconnecting
     });
   }
   next();

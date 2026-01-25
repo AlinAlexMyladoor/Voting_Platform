@@ -26,7 +26,7 @@ const Dashboard = ({ user: userProp, setUser }) => {
 
   // Fetch session ONCE on mount - single source of truth
   useEffect(() => {
-    const fetchSession = async (retryCount = 0) => {
+    const fetchSession = async (retryCount = 0, maxRetries = 2) => {
       try {
         const res = await axios.get(`${API_URL}/auth/login/success`, { withCredentials: true });
         if (res.data && res.data.user) {
@@ -44,13 +44,14 @@ const Dashboard = ({ user: userProp, setUser }) => {
         }
       } catch (err) {
         if (err.response?.status === 401) {
-          // Retry once after 1200ms for OAuth redirect timing issue
-          if (retryCount === 0) {
-            console.log('🔄 Session not ready, retrying in 1.2s...');
-            setTimeout(() => fetchSession(1), 1200);
+          // Retry with exponential backoff: 800ms, 1600ms
+          if (retryCount < maxRetries) {
+            const delay = 800 * Math.pow(2, retryCount);
+            console.log(`🔄 Session not ready (attempt ${retryCount + 1}/${maxRetries + 1}), retrying in ${delay}ms...`);
+            setTimeout(() => fetchSession(retryCount + 1, maxRetries), delay);
             return;
           }
-          console.log('ℹ️ Not authenticated after retry, redirecting to login');
+          console.log('ℹ️ Not authenticated after retries, redirecting to login');
         } else {
           console.error('❌ Session error:', err.message);
         }
@@ -152,7 +153,7 @@ const Dashboard = ({ user: userProp, setUser }) => {
     }
   }, [user]); // Removed showProfileModal from dependencies to prevent re-triggering
 
-  const castVote = async (candidateId, candidateName) => {
+  const castVote = async (candidateId, candidateName, retryCount = 0) => {
     console.log('🗳️ Voting for:', candidateName);
     
     // Double-check voting status before making the API call
@@ -194,8 +195,32 @@ const Dashboard = ({ user: userProp, setUser }) => {
         }
       }
     } catch (err) {
+      // Handle 401 with retry after refreshing session
+      if (err.response?.status === 401 && retryCount === 0) {
+        console.log('🔄 Vote failed with 401, refreshing session and retrying...');
+        try {
+          // Refresh session
+          const sessionRes = await axios.get(`${API_URL}/auth/login/success`, { withCredentials: true });
+          if (sessionRes.data && sessionRes.data.user) {
+            console.log('✅ Session refreshed, retrying vote...');
+            setLocalUser(sessionRes.data.user);
+            // Retry vote once
+            await castVote(candidateId, candidateName, 1);
+            return;
+          }
+        } catch (sessionErr) {
+          console.error('❌ Session refresh failed:', sessionErr.message);
+        }
+      }
+      
       console.error('❌ Vote error:', err.response?.data?.message || err.message);
-      alert(err.response?.data?.message || "Voting failed. Please try again.");
+      
+      if (err.response?.status === 401) {
+        alert("Session expired. Please login again.");
+        navigate('/login');
+      } else {
+        alert(err.response?.data?.message || "Voting failed. Please try again.");
+      }
     }
   };
 
