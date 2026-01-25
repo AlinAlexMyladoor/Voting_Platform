@@ -1,0 +1,347 @@
+/* Import Tourney and Audiowide */
+@import url('https://fonts.googleapis.com/css2?family=Audiowide&family=Tourney:ital,wght@0,900;1,900&family=Plus+Jakarta+Sans:wght@500;700&display=swap');
+.login-container {
+  height: 100vh;
+  width: 100vw;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  
+  /* The 3D Mesh: White, Light Blue, Pink, and Purple */
+  background-color: #ffffff;
+  background-image:
+    radial-gradient(at 10% 20%, rgba(158, 178, 229, 0.6) 0px, transparent 50%), /* Light Blue */
+    radial-gradient(at 90% 10%, rgba(208, 156, 218, 0.6) 0px, transparent 50%), /* Pink/Purple */
+    radial-gradient(at 50% 50%, rgba(255, 255, 255, 1) 0px, transparent 80%),   /* Center White */
+    radial-gradient(at 80% 90%, rgba(153, 139, 216, 0.6) 0px, transparent 50%), /* Deep Purple */
+    radial-gradient(at 20% 80%, rgba(251, 207, 232, 0.6) 0px, transparent 50%); /* Soft Pink */
+
+  /* This animation makes the 3D "blobs" shift slowly */
+  background-size: 100% 100%;
+  position: relative;
+}
+
+/* Add two floating 3D spheres for extra depth */
+.login-container::before,
+.login-container::after {
+  content: '';
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(60px);
+  z-index: 0;
+  opacity: 0.5;
+  animation: float 20s infinite alternate;
+}
+
+.login-container::before {
+  width: 400px;
+  height: 400px;
+  background: #d09cda;
+  top: -100px;
+  left: -100px;
+}
+
+.login-container::after {
+  width: 300px;
+  height: 300px;
+  background: #9eb2e5;
+  bottom: -50px;
+  right: -50px;
+  animation-delay: -5s;
+}
+
+@keyframes float {
+  0% { transform: translate(0, 0); }
+  100% { transform: translate(100px, 50px); }
+}
+
+.login-card {
+  background: #ffffff;
+  padding: 60px 40px;
+  border-radius: 30px;
+  position: relative;
+  width: 100%;
+  max-width: 420px;
+  text-align: center;
+  z-index: 1;
+  overflow: hidden; 
+  background: rgba(255, 255, 255, 0.8) !important;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+}
+
+/* Thick & Slow Traveling Light */
+.login-card::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: conic-gradient(
+    transparent, 
+    #3b82f6, 
+    #00ffff, /* Cyan for that extra tournament glow */
+    #3b82f6,
+    transparent 30%
+  );
+  animation: rotateLight 15s linear infinite; /* Very slow movement */
+  z-index: -2;
+}
+
+/* Thickness Control - Set to 10px for a bold border */
+.login-card::after {
+  content: '';
+  position: absolute;
+  inset: 7.5px; 
+  background: white;
+  border-radius: 22px;
+  z-index: -2;
+}
+
+/* Title Styling with Tourney */
+.login-card h1 {
+  font-family: 'Tourney', sans-serif;
+  font-weight: 900;
+  font-style: italic;
+  font-size: 42px;
+  line-height: 1;
+  margin-bottom: 5px;
+  color: #1e293b;
+  text-transform: uppercase;
+  /* Subtle text-shadow for depth */
+  text-shadow: 3px 3px 0px #e2e8f0;
+}
+
+/* Subtitle with Audiowide for a tech-touch */
+.login-card p {
+  font-family: 'Audiowide', sans-serif;
+  color: #3b82f6;
+  font-size: 12px;
+  letter-spacing: 3px;
+  margin-bottom: 40px;
+  text-transform: uppercase;
+}
+
+.button-group {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.login-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 16px;
+  border: 2px solid #f1f5f9;
+  border-radius: 15px;
+  background: #ffffff;
+  cursor: pointer;
+  font-weight: 700;
+  color: #334155;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.login-btn:hover {
+  border-color: #3b82f6;
+  background: #eff6ff;
+  transform: scale(1.03);
+}
+
+.divider {
+  display: flex;
+  align-items: center;
+  margin: 25px 0;
+  color: #cbd5e1;
+  font-size: 14px;
+}
+
+.divider::before,
+.divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: #e2e8f0;
+}
+
+.divider span {
+  margin: 0 12px;
+}
+
+.register-btn {
+  width: 100%;
+  padding: 14px;
+  border: 2px solid #3b82f6;
+  border-radius: 15px;
+  background: #3b82f6;
+  color: white;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 15px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.register-btn:hover {
+  background: #1e40af;
+  border-color: #1e40af;
+  transform: scale(1.02);
+}
+
+/* Register Form Styles */
+.login-card h2 {
+  font-family: 'Tourney', sans-serif;
+  font-weight: 900;
+  font-style: italic;
+  font-size: 28px;
+  color: #1e293b;
+  margin-bottom: 20px;
+}
+
+.register-form {
+  text-align: left;
+  margin: 20px 0;
+}
+
+.form-group {
+  margin-bottom: 16px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 6px;
+  color: #1e293b;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 12px 14px;
+  border: 2px solid #e2e8f0;
+  border-radius: 10px;
+  font-size: 14px;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  transition: border-color 0.3s;
+  box-sizing: border-box;
+}
+
+.form-group input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.form-group input:disabled {
+  background-color: #f1f5f9;
+  cursor: not-allowed;
+}
+
+.error-message {
+  background-color: #fee2e2;
+  color: #dc2626;
+  padding: 12px;
+  border-radius: 10px;
+  margin-bottom: 16px;
+  font-size: 14px;
+  border-left: 4px solid #dc2626;
+}
+
+.success-message {
+  background-color: #dcfce7;
+  color: #16a34a;
+  padding: 12px;
+  border-radius: 10px;
+  margin-bottom: 16px;
+  font-size: 14px;
+  border-left: 4px solid #16a34a;
+}
+
+.submit-btn {
+  width: 100%;
+  padding: 14px;
+  border: none;
+  border-radius: 10px;
+  background: #3b82f6;
+  color: white;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 15px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  margin-top: 10px;
+}
+
+.submit-btn:hover:not(:disabled) {
+  background: #1e40af;
+  transform: scale(1.02);
+}
+
+.submit-btn:disabled {
+  background: #cbd5e1;
+  cursor: not-allowed;
+}
+
+.back-btn {
+  width: 100%;
+  padding: 12px;
+  border: 2px solid #e2e8f0;
+  border-radius: 10px;
+  background: white;
+  color: #3b82f6;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 14px;
+  transition: all 0.3s;
+  margin-top: 12px;
+}
+
+.back-btn:hover:not(:disabled) {
+  border-color: #3b82f6;
+  background: #eff6ff;
+}
+
+.back-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Auth Links Styling */
+.auth-links {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.link-btn {
+  background: none;
+  border: none;
+  color: #3b82f6;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 14px;
+  text-decoration: none;
+  transition: all 0.3s;
+  padding: 8px 0;
+}
+
+.link-btn:hover:not(:disabled) {
+  color: #1e40af;
+  text-decoration: underline;
+}
+
+.link-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+@keyframes rotateLight {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}

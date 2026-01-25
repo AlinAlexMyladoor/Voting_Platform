@@ -1,0 +1,206 @@
+/* ====== Shared Theme Variables ====== */
+:root {
+  --bg-gradient: linear-gradient(135deg, #e6f0fa 0%, #cfe4f7 100%);
+  --deep-blue: #2a4d7c;
+  --slate-blue: #1e293b;
+  --accent-blue: #3b82f6;
+  --glow-blue: #60a5fa;
+}
+
+/* Prevent page-level scrolling for dashboard layout */
+html, body {
+  height: 100%;
+  overflow: hidden;
+}
+
+/* Prevent page-level scroll while keeping modal/list scrollable */
+html, body, #root { height: 100%; }
+.dashboard-container { overflow: hidden; }
+
+.dashboard-container {
+  min-height: 100vh;
+  padding: 40px 20px;
+  background: var(--bg-gradient);
+  font-family: 'Inter', sans-serif;
+  text-align: center;
+}
+
+/* ====== Navigation ====== */
+.dashboard-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 40px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+  margin-bottom: 40px;
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.logo-text {
+  font-family: 'Lobster', cursive;
+  color: var(--deep-blue);
+  font-size: 1.5rem;
+  margin: 0;
+}
+
+/* ====== Header & Typography ====== */
+.welcome-text {
+  font-family: 'Inter', sans-serif;
+  font-weight: 700;
+  color: var(--slate-blue);
+  font-size: 2.5rem;
+}
+
+.highlight-name {
+  color: var(--accent-blue);
+}
+
+.sub-text {
+  color: #5a6b85;
+}
+
+.voted-badge {
+  background: #d4edda;
+  color: #155724;
+  padding: 10px 20px;
+  border-radius: 30px;
+  display: inline-block;
+  font-weight: 600;
+  margin-top: 10px;
+}
+
+/* ====== Candidate Cards (The Animated Glow) ====== */
+.candidate-grid {
+  display: flex;
+  justify-content: center;
+  gap: 30px;
+  flex-wrap: wrap;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.candidate-card {
+  background: white;
+  padding: 30px;
+  border-radius: 15px;
+  width: 280px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+  transition: transform 0.3s ease;
+  z-index: 1;
+}
+
+/* Animated Border logic from Login */
+.candidate-card::before {
+  content: '';
+  position: absolute;
+  top: -50%; left: -50%;
+  width: 200%; height: 200%;
+  background: conic-gradient(transparent, var(--accent-blue), var(--glow-blue), transparent 40%);
+  animation: rotateLight 8s linear infinite;
+  z-index: -2;
+}
+
+.candidate-card::after {
+  content: '';
+  position: absolute;
+  inset: 4px; /* Border thickness */
+  background: white;
+  border-radius: 12px;
+  z-index: -1;
+}
+
+.candidate-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 15px 40px rgba(59, 130, 246, 0.2);
+}
+
+.candidate-avatar {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  border: 3px solid #e6f0fa;
+  margin-bottom: 15px;
+}
+
+/* ====== Success View ====== */
+.success-card {
+  background: white;
+  padding: 50px;
+  border-radius: 20px;
+  max-width: 600px;
+  margin: 0 auto;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+}
+
+.success-icon { font-size: 60px; margin-bottom: 20px; }
+
+.progress-bar-bg {
+  background: #eef2f7;
+  height: 10px;
+  border-radius: 5px;
+  flex-grow: 1;
+  margin: 0 15px;
+  overflow: hidden;
+}
+
+.progress-bar-fill {
+  background: var(--accent-blue);
+  height: 100%;
+  border-radius: 5px;
+  transition: width 1s ease-in-out;
+}
+
+.stat-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 15px;
+  font-weight: 500;
+  color: var(--slate-blue);
+}
+
+/* ====== Buttons & Links ====== */
+.vote-btn-active {
+  background: var(--accent-blue);
+  color: white;
+  border: none;
+  padding: 12px;
+  width: 100%;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.vote-btn-active:hover {
+  background: var(--deep-blue);
+  transform: scale(1.02);
+}
+
+.logout-btn {
+  background: #ffeded;
+  color: #ef4444;
+  border: 1px solid #ffcfcf;
+  padding: 8px 18px;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.social-links a {
+  color: var(--accent-blue);
+  text-decoration: none;
+  font-size: 0.85rem;
+  margin: 0 10px;
+  font-weight: 500;
+}
+
+@keyframes rotateLight {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
