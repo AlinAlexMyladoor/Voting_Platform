@@ -71,27 +71,44 @@ app.use(
 // --------------------
 // Session Middleware
 // --------------------
-app.use(
-  session({
-    secret: process.env.SESSION_SECRET || "secret_key",
-    resave: false,
-    saveUninitialized: false,
-    store: MongoStore.create({
-      mongoUrl: process.env.MONGO_URI,
-      touchAfter: 24 * 3600, // Lazy session update (seconds)
-      crypto: {
-        secret: process.env.SESSION_SECRET || "secret_key"
+// For Vercel serverless, MongoStore will handle its own connection
+try {
+  app.use(
+    session({
+      secret: process.env.SESSION_SECRET || "secret_key",
+      resave: false,
+      saveUninitialized: false,
+      store: MongoStore.create({
+        mongoUrl: process.env.MONGO_URI,
+        ttl: 24 * 60 * 60, // Session TTL in seconds (24 hours)
+        autoRemove: 'native', // Use MongoDB's TTL feature
+        touchAfter: 24 * 3600, // Lazy session update
+      }),
+      cookie: {
+        secure: true, // Always true for production (Vercel uses HTTPS)
+        sameSite: 'none', // Required for cross-domain cookies
+        maxAge: 24 * 60 * 60 * 1000, // 24 hours
+        httpOnly: true
       }
-    }),
-    cookie: {
-      // PRO TIP: On Vercel, we almost always want these set to true/none for cross-site auth
-      secure: true,        // REQUIRED: browser only sends cookie over HTTPS
-      sameSite: 'none',    // REQUIRED: allows cookie between frontend/backend domains
-      maxAge: 24 * 60 * 60 * 1000, // 24 hours
-      httpOnly: true       // Prevents client-side JS from accessing the cookie
-    }
-  })
-);
+    })
+  );
+} catch (error) {
+  console.error('❌ Session middleware error:', error);
+  // Fallback to in-memory sessions if MongoStore fails
+  app.use(
+    session({
+      secret: process.env.SESSION_SECRET || "secret_key",
+      resave: false,
+      saveUninitialized: false,
+      cookie: {
+        secure: true,
+        sameSite: 'none',
+        maxAge: 24 * 60 * 60 * 1000,
+        httpOnly: true
+      }
+    })
+  );
+}
 
 // --------------------
 // Passport Middleware
@@ -123,25 +140,48 @@ app.use((req, res, next) => {
 // Routes
 // --------------------
 app.get("/", (req, res) => {
-  res.send("Backend is running!");
+  res.json({ 
+    message: "Backend is running!",
+    timestamp: new Date().toISOString(),
+    mongoConnected: mongoose.connection.readyState === 1
+  });
 });
 
 app.use("/auth", authRoutes);
 app.use("/api", votingRoutes);
 
 // --------------------
+// Error Handling Middleware
+// --------------------
+app.use((err, req, res, next) => {
+  console.error('❌ Server Error:', err);
+  res.status(500).json({ 
+    message: 'Internal Server Error',
+    error: process.env.NODE_ENV === 'production' ? 'Something went wrong' : err.message
+  });
+});
+
+// --------------------
 // Database Connection
 // --------------------
 const PORT = process.env.PORT || 5000;
 
+// Connect to MongoDB
 mongoose
   .connect(process.env.MONGO_URI)
   .then(() => {
     console.log("Connected to MongoDB");
-    app.listen(PORT, () => {
-      console.log(`Server is running on port ${PORT}`);
-    });
   })
   .catch((err) => {
     console.error("MongoDB connection error:", err);
   });
+
+// For local development, start the server
+if (process.env.NODE_ENV !== 'production') {
+  app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
+  });
+}
+
+// Export for Vercel serverless
+module.exports = app;
