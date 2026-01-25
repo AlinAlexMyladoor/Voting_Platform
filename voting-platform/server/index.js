@@ -9,12 +9,41 @@ const MongoStore = require("connect-mongo");
 const passport = require("passport");
 const helmet = require("helmet");
 
-// Import Passport config and routes
+const app = express();
+
+// ==========================================
+// 🚨 MONGODB CONNECTION - MUST BE FIRST 🚨
+// ==========================================
+// Connect to MongoDB before anything else
+// Vercel serverless needs this at the top
+let isConnected = false;
+
+const connectDB = async () => {
+  if (isConnected) {
+    console.log('Using existing MongoDB connection');
+    return;
+  }
+
+  try {
+    const db = await mongoose.connect(process.env.MONGO_URI, {
+      serverSelectionTimeoutMS: 5000,
+      socketTimeoutMS: 45000,
+    });
+    isConnected = db.connections[0].readyState === 1;
+    console.log('✅ MongoDB connected successfully');
+  } catch (error) {
+    console.error('❌ MongoDB connection failed:', error.message);
+    throw error;
+  }
+};
+
+// Initialize connection
+connectDB().catch(err => console.error('Initial MongoDB connection error:', err));
+
+// Import Passport config and routes AFTER mongoose is initialized
 require("./passport");
 const authRoutes = require("./routes/auth");
 const votingRoutes = require("./routes/voting");
-
-const app = express();
 
 // ==========================================
 // 🚨 CRITICAL FIX FOR VERCEL DEPLOYMENT 🚨
@@ -60,7 +89,9 @@ app.use(
           "https://*.googleusercontent.com",
           "https://*.licdn.com",
         ],
-        "navigate-to": ["'self'", "https://*.linkedin.com", "https://*.google.com"],
+        // Note: "navigate-to" is not a standard CSP directive and causes warnings
+        // Navigation is controlled by form-action and frame-ancestors instead
+        "form-action": ["'self'", "https://*.linkedin.com", "https://*.google.com"],
       },
     },
     crossOriginOpenerPolicy: { policy: "same-origin-allow-popups" },
@@ -119,7 +150,20 @@ app.use(passport.session());
 // --------------------
 // Debug Middleware (reduced logging for production)
 // --------------------
-app.use((req, res, next) => {
+app.use(async (req, res, next) => {
+  // Ensure MongoDB is connected for all routes (except health check)
+  if (req.path !== '/') {
+    try {
+      await connectDB();
+    } catch (error) {
+      console.error('❌ MongoDB not available:', error.message);
+      return res.status(503).json({ 
+        message: 'Database temporarily unavailable',
+        error: 'Please try again in a moment'
+      });
+    }
+  }
+  
   // Only log authentication-related requests
   if (req.path.includes('/auth') || req.path.includes('/api/vote')) {
     console.log(`📍 ${req.method} ${req.path}`, {
@@ -148,27 +192,32 @@ app.use("/api", votingRoutes);
 // Error Handling Middleware
 // --------------------
 app.use((err, req, res, next) => {
-  console.error('❌ Server Error:', err);
+  console.error('❌ Server Error:', {
+    message: err.message,
+    stack: err.stack?.split('\n')[0], // First line of stack trace
+    path: req.path,
+    method: req.method
+  });
+  
+  // Check if it's a MongoDB connection error
+  if (err.name === 'MongooseError' || err.message?.includes('mongo')) {
+    return res.status(503).json({ 
+      message: 'Database Connection Error',
+      error: 'Unable to connect to database. Please try again.'
+    });
+  }
+  
   res.status(500).json({ 
     message: 'Internal Server Error',
-    error: process.env.NODE_ENV === 'production' ? 'Something went wrong' : err.message
+    error: process.env.NODE_ENV === 'production' ? 'Something went wrong' : err.message,
+    path: req.path
   });
 });
 
 // --------------------
-// Database Connection
+// Server Port
 // --------------------
 const PORT = process.env.PORT || 5000;
-
-// Connect to MongoDB
-mongoose
-  .connect(process.env.MONGO_URI)
-  .then(() => {
-    console.log("Connected to MongoDB");
-  })
-  .catch((err) => {
-    console.error("MongoDB connection error:", err);
-  });
 
 // For local development, start the server
 if (process.env.NODE_ENV !== 'production') {
