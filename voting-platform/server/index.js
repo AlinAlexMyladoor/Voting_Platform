@@ -112,8 +112,8 @@ try {
   app.use(
     session({
       secret: process.env.SESSION_SECRET || "secret_key",
-      resave: true, // Force session save on every request (was false)
-      saveUninitialized: false,
+      resave: true, // Force session save on every request
+      saveUninitialized: false, // Don't create session until something stored
       store: MongoStore.create({
         mongoUrl: process.env.MONGO_URI,
         ttl: 24 * 60 * 60, // Session TTL in seconds (24 hours)
@@ -124,7 +124,10 @@ try {
         secure: true, // Always true for production (Vercel uses HTTPS)
         sameSite: 'none', // Required for cross-domain cookies
         maxAge: 24 * 60 * 60 * 1000, // 24 hours
-        httpOnly: true
+        httpOnly: true,
+        // Note: Incognito mode may block third-party cookies
+        // This affects cross-domain (e-ballot.vercel.app → e-ballotserver.vercel.app)
+        partitioned: true, // Chrome's new CHIPS - allows cross-site cookies in incognito
       }
     })
   );

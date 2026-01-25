@@ -27,6 +27,49 @@ const Login = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isIncognito, setIsIncognito] = useState(false);
+
+  // Detect incognito/private mode
+  useEffect(() => {
+    const detectIncognito = async () => {
+      // Multiple detection methods for different browsers
+      try {
+        // Method 1: IndexedDB (works in Chrome/Edge)
+        if ('storage' in navigator && 'estimate' in navigator.storage) {
+          const { quota } = await navigator.storage.estimate();
+          if (quota && quota < 120000000) { // Less than 120MB typically means incognito
+            setIsIncognito(true);
+            return;
+          }
+        }
+
+        // Method 2: Storage test (works in Firefox)
+        const testKey = '__incognito_test__';
+        try {
+          localStorage.setItem(testKey, '1');
+          localStorage.removeItem(testKey);
+        } catch (e) {
+          setIsIncognito(true);
+          return;
+        }
+
+        // Method 3: FileSystem API (Safari)
+        if ('webkitRequestFileSystem' in window) {
+          window.webkitRequestFileSystem(
+            window.TEMPORARY,
+            1,
+            () => {},
+            () => setIsIncognito(true)
+          );
+        }
+      } catch (e) {
+        // If detection fails, assume not incognito
+        console.log('Incognito detection failed:', e);
+      }
+    };
+
+    detectIncognito();
+  }, []);
 
   // Check if there's a reset token in the URL
   useEffect(() => {
@@ -291,6 +334,26 @@ const Login = () => {
       <div className="login-card">
         <h1>VOTING</h1>
         <p>Platform v2.0</p>
+
+        {/* Incognito Mode Warning */}
+        {isIncognito && (
+          <div style={{
+            backgroundColor: '#fff3cd',
+            border: '1px solid #ffc107',
+            borderRadius: '8px',
+            padding: '12px',
+            marginBottom: '20px',
+            fontSize: '0.9rem',
+            color: '#856404'
+          }}>
+            <strong>⚠️ Incognito/Private Mode Detected</strong>
+            <p style={{ margin: '8px 0 0 0', fontSize: '0.85rem' }}>
+              OAuth login (Google/LinkedIn) may not work in incognito mode due to third-party cookie restrictions. 
+              <br/>
+              <strong>Recommendation:</strong> Use <strong>Email/Password login</strong> below, or open this site in a regular browser window.
+            </p>
+          </div>
+        )}
 
         {/* OAuth Login View */}
         {currentView === 'oauth' && (
