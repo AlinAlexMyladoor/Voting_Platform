@@ -5,6 +5,7 @@ const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
 const session = require("express-session");
+const MongoStore = require("connect-mongo");
 const passport = require("passport");
 const helmet = require("helmet");
 
@@ -75,11 +76,19 @@ app.use(
     secret: process.env.SESSION_SECRET || "secret_key",
     resave: false,
     saveUninitialized: false,
+    store: MongoStore.create({
+      mongoUrl: process.env.MONGO_URI,
+      touchAfter: 24 * 3600, // Lazy session update (seconds)
+      crypto: {
+        secret: process.env.SESSION_SECRET || "secret_key"
+      }
+    }),
     cookie: {
       // PRO TIP: On Vercel, we almost always want these set to true/none for cross-site auth
       secure: true,        // REQUIRED: browser only sends cookie over HTTPS
       sameSite: 'none',    // REQUIRED: allows cookie between frontend/backend domains
-      maxAge: 24 * 60 * 60 * 1000 // 24 hours
+      maxAge: 24 * 60 * 60 * 1000, // 24 hours
+      httpOnly: true       // Prevents client-side JS from accessing the cookie
     }
   })
 );
@@ -89,6 +98,26 @@ app.use(
 // --------------------
 app.use(passport.initialize());
 app.use(passport.session());
+
+// --------------------
+// Debug Middleware (helps diagnose session issues)
+// --------------------
+app.use((req, res, next) => {
+  // Only log API and auth requests to reduce noise
+  if (req.path.startsWith('/api') || req.path.startsWith('/auth')) {
+    console.log('📍 Request:', {
+      method: req.method,
+      path: req.path,
+      sessionID: req.sessionID,
+      hasSession: !!req.session,
+      isAuthenticated: req.isAuthenticated ? req.isAuthenticated() : false,
+      hasUser: !!req.user,
+      userId: req.user?.id,
+      hasCookie: !!req.headers.cookie
+    });
+  }
+  next();
+});
 
 // --------------------
 // Routes

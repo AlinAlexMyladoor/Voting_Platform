@@ -4,8 +4,24 @@ const Candidate = require("../models/Candidate");
 
 // Middleware: Check Login
 const isAuthenticated = (req, res, next) => {
-  if (req.user) return next();
-  return res.status(401).json({ message: "Login required" });
+  console.log('🔐 Auth Check:', {
+    isAuthenticated: req.isAuthenticated(),
+    hasUser: !!req.user,
+    userId: req.user?.id,
+    sessionID: req.sessionID,
+    cookies: req.headers.cookie ? 'Present' : 'Missing'
+  });
+  
+  if (req.isAuthenticated && req.isAuthenticated()) {
+    return next();
+  }
+  
+  if (req.user) {
+    return next();
+  }
+  
+  console.log('❌ Authentication failed - no user in session');
+  return res.status(401).json({ message: "Login required. Please login again." });
 };
 
 // 1. Get all candidates
