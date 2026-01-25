@@ -51,8 +51,10 @@ router.get(
     // Explicitly save session before redirect to ensure it's persisted
     req.session.save((err) => {
       if (err) {
-        console.error('Session save error:', err);
+        console.error('❌ Google session save error:', err);
+        return res.redirect(`${process.env.CLIENT_URL || 'http://localhost:3000'}/login?error=session`);
       }
+      console.log('✅ Google OAuth session saved for:', req.user?.name);
       res.redirect(`${process.env.CLIENT_URL || 'http://localhost:3000'}/dashboard`);
     });
   }
@@ -77,8 +79,10 @@ router.get(
     // Explicitly save session before redirect to ensure it's persisted
     req.session.save((err) => {
       if (err) {
-        console.error('Session save error:', err);
+        console.error('❌ LinkedIn session save error:', err);
+        return res.redirect(`${process.env.CLIENT_URL || 'http://localhost:3000'}/login?error=session`);
       }
+      console.log('✅ LinkedIn OAuth session saved for:', req.user?.name);
       res.redirect(`${process.env.CLIENT_URL || 'http://localhost:3000'}/dashboard`);
     });
   }

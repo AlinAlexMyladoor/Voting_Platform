@@ -23,7 +23,7 @@ const Dashboard = ({ user: userProp, setUser }) => {
 
   // Fetch session ONCE on mount - single source of truth
   useEffect(() => {
-    const fetchSession = async () => {
+    const fetchSession = async (retryCount = 0) => {
       try {
         const res = await axios.get(`${API_URL}/auth/login/success`, { withCredentials: true });
         if (res.data && res.data.user) {
@@ -41,7 +41,13 @@ const Dashboard = ({ user: userProp, setUser }) => {
         }
       } catch (err) {
         if (err.response?.status === 401) {
-          console.log('ℹ️ Not authenticated, redirecting to login');
+          // Retry once after 1200ms for OAuth redirect timing issue
+          if (retryCount === 0) {
+            console.log('🔄 Session not ready, retrying in 1.2s...');
+            setTimeout(() => fetchSession(1), 1200);
+            return;
+          }
+          console.log('ℹ️ Not authenticated after retry, redirecting to login');
         } else {
           console.error('❌ Session error:', err.message);
         }
@@ -125,15 +131,23 @@ const Dashboard = ({ user: userProp, setUser }) => {
     loadData();
   }, []);
 
-  // Show LinkedIn profile modal for LinkedIn users without profile URL
+  // Show LinkedIn profile modal for LinkedIn users without profile URL (only once per session)
   useEffect(() => {
-    if (user && user.provider === 'linkedin' && !user.linkedin && !showProfileModal) {
-      const timer = setTimeout(() => {
-        setShowProfileModal(true);
-      }, 1500);
-      return () => clearTimeout(timer);
+    if (user && user.provider === 'linkedin' && !user.linkedin) {
+      // Check if we've already shown the modal for this user
+      const modalShownKey = `linkedin_modal_shown_${user.id}`;
+      const hasShownModal = sessionStorage.getItem(modalShownKey);
+      
+      if (!hasShownModal && !showProfileModal) {
+        const timer = setTimeout(() => {
+          setShowProfileModal(true);
+          // Mark as shown in session storage
+          sessionStorage.setItem(modalShownKey, 'true');
+        }, 1500);
+        return () => clearTimeout(timer);
+      }
     }
-  }, [user, showProfileModal]);
+  }, [user]); // Removed showProfileModal from dependencies to prevent re-triggering
 
   const castVote = async (candidateId, candidateName) => {
     console.log('🗳️ Voting for:', candidateName);
