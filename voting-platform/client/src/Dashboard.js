@@ -7,9 +7,9 @@ import Plot from 'react-plotly.js';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
-const Dashboard = ({ user: userProp, setUser, isLoading: parentLoading }) => {
+const Dashboard = ({ user: userProp, setUser }) => {
   const navigate = useNavigate();
-  const [user, setLocalUser] = useState(userProp);
+  const [user, setLocalUser] = useState(null);
   const [voters, setVoters] = useState([]);
   const [candidates, setCandidates] = useState([]);
   const [hasVoted, setHasVoted] = useState(false);
@@ -17,45 +17,58 @@ const Dashboard = ({ user: userProp, setUser, isLoading: parentLoading }) => {
   const [loading, setLoading] = useState(true);
   const [showVoterModal, setShowVoterModal] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
+  const [showResultsModal, setShowResultsModal] = useState(false);
   const [manualLinkedin, setManualLinkedin] = useState("");
   const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
 
-  // Fetch session independently to ensure user data is always fresh
+  // Fetch session ONCE on mount - single source of truth
   useEffect(() => {
     const fetchSession = async () => {
       try {
         const res = await axios.get(`${API_URL}/auth/login/success`, { withCredentials: true });
         if (res.data && res.data.user) {
-          console.log('✅ Dashboard: User authenticated -', res.data.user.name);
-          setLocalUser(res.data.user);
-          setHasVoted(res.data.user.hasVoted || false);
+          console.log('✅ User authenticated:', res.data.user.name);
+          const userData = res.data.user;
+          setLocalUser(userData);
+          setHasVoted(userData.hasVoted || false);
+          // Update parent state
           if (setUser) {
-            setUser(res.data.user); // Update parent state too
+            setUser(userData);
           }
         } else {
-          // No session found, redirect to login
-          console.log('⚠️ Dashboard: No session, redirecting to login');
+          console.log('⚠️ No session, redirecting to login');
           navigate('/login');
         }
       } catch (err) {
         if (err.response?.status === 401) {
-          console.log('ℹ️ Dashboard: Not authenticated, redirecting to login');
+          console.log('ℹ️ Not authenticated, redirecting to login');
         } else {
-          console.error('❌ Dashboard: Session error -', err.message);
+          console.error('❌ Session error:', err.message);
         }
         navigate('/login');
       }
     };
     fetchSession();
-  }, []); // Fetch on mount
+  }, []); // Only on mount
 
-  // Update local user when prop changes
+  // Load candidates and voters data
   useEffect(() => {
-    if (userProp) {
-      setLocalUser(userProp);
-      setHasVoted(userProp.hasVoted || false);
-    }
-  }, [userProp]);
+    const loadData = async () => {
+      try {
+        const [candRes, voterRes] = await Promise.all([
+          axios.get(`${API_URL}/api/candidates`, { withCredentials: true }),
+          axios.get(`${API_URL}/api/voters`, { withCredentials: true })
+        ]);
+        setCandidates(candRes.data);
+        setVoters(voterRes.data);
+      } catch (err) {
+        console.error("❌ Data load error:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadData();
+  }, []);
 
   const updateLinkedin = async () => {
     if (!manualLinkedin || !manualLinkedin.trim()) {
@@ -112,17 +125,9 @@ const Dashboard = ({ user: userProp, setUser, isLoading: parentLoading }) => {
     loadData();
   }, []);
 
-  // Sync hasVoted state with local user state
-  useEffect(() => {
-    if (user) {
-      setHasVoted(user.hasVoted || false);
-    }
-  }, [user]);
-
-  
+  // Show LinkedIn profile modal for LinkedIn users without profile URL
   useEffect(() => {
     if (user && user.provider === 'linkedin' && !user.linkedin && !showProfileModal) {
-      
       const timer = setTimeout(() => {
         setShowProfileModal(true);
       }, 1500);
@@ -181,8 +186,8 @@ const Dashboard = ({ user: userProp, setUser, isLoading: parentLoading }) => {
     window.location.href = `${API_URL}/auth/logout`;
   };
 
-  // Show loading state while fetching session
-  if (loading || parentLoading) {
+  // Show loading state while fetching data
+  if (loading || !user) {
     return (
       <div style={styles.container}>
         <div style={styles.loadingCard}>
@@ -193,16 +198,64 @@ const Dashboard = ({ user: userProp, setUser, isLoading: parentLoading }) => {
     );
   }
 
-  // Redirect to login if no user
-  if (!user) {
-    navigate('/login');
-    return null;
-  }
+  // Results modal (can be shown anytime)
+  const ResultsModal = () => {
+    const labels = candidates.map(c => c.name);
+    const values = candidates.map(c => c.votes);
+    const totalVotes = values.reduce((a, b) => a + b, 0);
+
+    return (
+      <div style={styles.modalOverlay} onClick={() => setShowResultsModal(false)}>
+        <div style={{...styles.modalContent, maxWidth: '700px'}} onClick={(e) => e.stopPropagation()}>
+          <div style={styles.modalHeader}>
+            <h2 style={{ margin: 0 }}>📊 Live Election Results</h2>
+            <button onClick={() => setShowResultsModal(false)} style={styles.closeBtn}>&times;</button>
+          </div>
+          <div style={{ padding: '20px 0' }}>
+            <Plot
+              data={[{
+                values: values,
+                labels: labels,
+                type: 'pie',
+                hole: 0.4,
+                pull: values.map((v, i) => i === 0 ? 0.1 : 0),
+                textinfo: "label+percent",
+                hoverinfo: "label+value",
+                marker: {
+                  colors: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'],
+                  line: { color: '#ffffff', width: 3 }
+                },
+                insidetextorientation: 'radial'
+              }]}
+              layout={{
+                height: 450,
+                autosize: true,
+                showlegend: true,
+                legend: { orientation: 'h', x: 0.5, xanchor: 'center', y: -0.1 },
+                paper_bgcolor: 'rgba(0,0,0,0)',
+                plot_bgcolor: 'rgba(0,0,0,0)',
+                margin: { t: 0, b: 50, l: 0, r: 0 },
+                annotations: [{
+                  font: { size: 20, color: '#1e293b', weight: 'bold' },
+                  showarrow: false,
+                  text: 'TOTAL<br>' + totalVotes,
+                  x: 0.5, y: 0.5
+                }]
+              }}
+              config={{ displayModeBar: false, responsive: true }}
+              style={{ width: "100%" }}
+            />
+          </div>
+        </div>
+      </div>
+    );
+  };
 
  
 if (votedCandidate) {
   const labels = candidates.map(c => c.name);
   const values = candidates.map(c => c.votes);
+  const totalVotes = values.reduce((a, b) => a + b, 0);
 
   return (
     <div style={styles.container}>
@@ -238,7 +291,7 @@ if (votedCandidate) {
               annotations: [{
                 font: { size: 20, color: '#1e293b', weight: 'bold' },
                 showarrow: false,
-                text: 'TOTAL<br>' + values.reduce((a, b) => a + b, 0),
+                text: 'TOTAL<br>' + totalVotes,
                 x: 0.5, y: 0.5
               }]
             }}
@@ -256,6 +309,9 @@ if (votedCandidate) {
 }
   return (
     <div style={styles.container}>
+      {/* Results Modal */}
+      {showResultsModal && <ResultsModal />}
+
       {/* LinkedIn Profile Modal Popup */}
       {showProfileModal && (
         <div style={styles.modalOverlay} onClick={() => setShowProfileModal(false)}>
@@ -370,7 +426,8 @@ if (votedCandidate) {
       <nav style={styles.nav}>
         <h3 style={{ margin: 0, color: '#007bff' }}>E-Ballot</h3>
         <div style={{ display: 'flex', gap: '15px' }}>
-          <button onClick={() => setShowVoterModal(true)} style={styles.secondaryBtn}>📊 View Voters</button>
+          <button onClick={() => setShowResultsModal(true)} style={styles.secondaryBtn}>📊 View Results</button>
+          <button onClick={() => setShowVoterModal(true)} style={styles.secondaryBtn}>� View Voters</button>
           <button onClick={handleLogout} style={styles.logoutBtn}>Logout</button>
         </div>
       </nav>
