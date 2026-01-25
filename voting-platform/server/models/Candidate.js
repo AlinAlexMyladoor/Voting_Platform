@@ -1,4 +1,4 @@
-// server/models/Candidate.js
+
 const mongoose = require('mongoose');
 
 const CandidateSchema = new mongoose.Schema({
@@ -22,7 +22,7 @@ const CandidateSchema = new mongoose.Schema({
     type: String,
     default: "",
   },
-  // We will increment this number when someone votes for them
+  
   voteCount: {
     type: Number,
     default: 0,

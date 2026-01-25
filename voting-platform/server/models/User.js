@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 
 const UserSchema = new mongoose.Schema(
   {
-    // Basic user info
+  
     name: {
       type: String,
       required: true,
@@ -17,41 +17,38 @@ const UserSchema = new mongoose.Schema(
       trim: true,
     },
 
-    // Password (null for OAuth users)
+
     password: {
       type: String,
       default: null,
     },
 
-    // OAuth related fields
     provider: {
-      type: String, // 'google', 'linkedin', 'local'
+      type: String, 
       required: true,
       enum: ['google', 'linkedin', 'local'],
     },
 
     providerId: {
       type: String,
-      default: null, // null for local users
+      default: null, 
     },
 
     profilePicture: {
-      type: String, // URL to profile photo
+      type: String, 
     },
 
-    // Social links
     linkedin: {
       type: String,
       default: ''
     },
 
-    // When the user cast their vote
     votedAt: {
       type: Date,
       default: null,
     },
 
-    // Voting logic
+    
     hasVoted: {
       type: Boolean,
       default: false,
@@ -62,7 +59,7 @@ const UserSchema = new mongoose.Schema(
       default: null,
     },
 
-    // Password reset (merged fields)
+  
     resetPasswordToken: {
       type: String,
       default: null,
