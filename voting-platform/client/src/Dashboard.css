@@ -57,6 +57,68 @@ button svg {
   flex-shrink: 0;
 }
 
+/* ====== Mobile Menu Animations ====== */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+/* Mobile menu button - hidden on desktop */
+@media (min-width: 769px) {
+  button[style*="mobileMenuBtn"] {
+    display: none !important;
+  }
+}
+
+/* Desktop nav - hidden on mobile */
+@media (max-width: 768px) {
+  div[style*="navDesktop"] {
+    display: none !important;
+  }
+  
+  button[style*="mobileMenuBtn"] {
+    display: flex !important;
+  }
+}
+
+/* Card hover effect */
+.candidate-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 15px 35px rgba(0,0,0,0.12);
+}
+
+/* Vote button hover effect */
+button[style*="voteBtn"]:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0,123,255,0.4);
+}
+
+/* Secondary button hover */
+button[style*="secondaryBtn"]:hover {
+  background: #d4e7ff;
+  transform: translateY(-1px);
+}
+
+/* Mobile menu button hover */
+button[style*="mobileMenuBtn2"]:hover {
+  background: #e7f0ff;
+  border-color: #007bff;
+  color: #007bff;
+}
+
 .logo-text {
   font-family: 'Lobster', cursive;
   color: var(--deep-blue);

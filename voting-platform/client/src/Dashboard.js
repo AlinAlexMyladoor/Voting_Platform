@@ -4,7 +4,7 @@ import axios from 'axios';
 import confetti from 'canvas-confetti';
 import './Dashboard.css';
 import Plot from 'react-plotly.js';
-import { FiBarChart2, FiUsers, FiLogOut, FiCheckCircle, FiAlertCircle, FiExternalLink } from 'react-icons/fi';
+import { FiBarChart2, FiUsers, FiLogOut, FiCheckCircle, FiAlertCircle, FiExternalLink, FiMenu, FiX, FiUser } from 'react-icons/fi';
 import { HiOutlineTrendingUp } from 'react-icons/hi';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
@@ -25,6 +25,7 @@ const Dashboard = ({ user: userProp, setUser }) => {
   const [showResultsModal, setShowResultsModal] = useState(false);
   const [manualLinkedin, setManualLinkedin] = useState("");
   const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // Fetch session ONCE on mount - single source of truth
   useEffect(() => {
@@ -559,19 +560,38 @@ if (votedCandidate) {
 
 const styles = {
   container: { padding: '40px 20px', fontFamily: '"Inter", sans-serif', backgroundColor: '#f8fafc', minHeight: '100vh', textAlign: 'center' },
-  nav: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '15px 40px', background: '#fff', borderRadius: '15px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', marginBottom: '40px' },
+  nav: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '15px 40px', background: 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)', borderRadius: '15px', boxShadow: '0 4px 20px rgba(0,0,0,0.08)', marginBottom: '40px', backdropFilter: 'blur(10px)', border: '1px solid rgba(255,255,255,0.3)' },
+  navBrand: { display: 'flex', alignItems: 'center' },
+  navDesktop: { display: 'flex', alignItems: 'center', gap: '20px' },
+  navProfile: { display: 'flex', alignItems: 'center', gap: '12px', padding: '8px 16px', background: '#f8fafc', borderRadius: '12px', marginRight: '10px' },
+  navAvatar: { width: '42px', height: '42px', borderRadius: '50%', border: '2px solid #007bff', objectFit: 'cover' },
+  navUserInfo: { display: 'flex', flexDirection: 'column', alignItems: 'flex-start' },
+  navUserName: { fontSize: '0.95rem', fontWeight: '600', color: '#1e293b', lineHeight: '1.2' },
+  navUserEmail: { fontSize: '0.75rem', color: '#64748b', lineHeight: '1.2' },
+  mobileMenuBtn: { display: 'none', background: 'none', border: 'none', color: '#007bff', cursor: 'pointer', padding: '8px' },
+  mobileMenu: { position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1000, display: 'flex', justifyContent: 'center', paddingTop: '80px', animation: 'fadeIn 0.2s ease' },
+  mobileMenuContent: { background: 'white', borderRadius: '20px 20px 0 0', width: '100%', maxWidth: '500px', padding: '24px', maxHeight: '80vh', overflowY: 'auto', boxShadow: '0 -4px 20px rgba(0,0,0,0.1)' },
+  mobileProfile: { display: 'flex', alignItems: 'center', gap: '15px', padding: '16px', background: 'linear-gradient(135deg, #e7f0ff 0%, #f0f7ff 100%)', borderRadius: '12px', marginBottom: '16px' },
+  mobileAvatar: { width: '56px', height: '56px', borderRadius: '50%', border: '3px solid #007bff', objectFit: 'cover' },
+  mobileUserInfo: { display: 'flex', flexDirection: 'column', alignItems: 'flex-start', flex: 1 },
+  mobileUserName: { fontSize: '1.1rem', fontWeight: '700', color: '#1e293b', marginBottom: '4px' },
+  mobileUserEmail: { fontSize: '0.85rem', color: '#64748b', marginBottom: '8px' },
+  mobileLinkedIn: { fontSize: '0.8rem', color: '#0077b5', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: '600' },
+  mobileDivider: { height: '1px', background: 'linear-gradient(to right, transparent, #e2e8f0, transparent)', margin: '16px 0' },
+  mobileMenuBtn2: { width: '100%', padding: '14px', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '10px', marginBottom: '10px', cursor: 'pointer', fontSize: '1rem', fontWeight: '600', color: '#1e293b', display: 'flex', alignItems: 'center', gap: '12px', transition: 'all 0.2s' },
+  mobileMenuLogout: { width: '100%', padding: '14px', background: '#fee2e2', border: '1px solid #fecaca', borderRadius: '10px', marginTop: '10px', cursor: 'pointer', fontSize: '1rem', fontWeight: '600', color: '#dc2626', display: 'flex', alignItems: 'center', gap: '12px' },
   header: { marginBottom: '40px' },
   votedBadge: { backgroundColor: '#d4edda', color: '#155724', padding: '10px 20px', borderRadius: '20px', display: 'inline-block', fontWeight: 'bold' },
   candidateGrid: { display: 'flex', justifyContent: 'center', gap: '30px', flexWrap: 'wrap' },
-  card: { background: '#fff', padding: '30px', borderRadius: '20px', width: '280px', boxShadow: '0 10px 15px rgba(0,0,0,0.05)', border: '1px solid #f1f5f9' },
+  card: { background: 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)', padding: '30px', borderRadius: '20px', width: '280px', boxShadow: '0 10px 30px rgba(0,0,0,0.08)', border: '1px solid rgba(59, 130, 246, 0.1)', transition: 'all 0.3s ease' },
   avatar: { width: '110px', height: '110px', borderRadius: '50%', marginBottom: '15px', border: '3px solid #007bff', objectFit: 'cover' },
   roleText: { color: '#64748b', fontSize: '0.9rem', marginBottom: '15px', height: '40px' },
   linksContainer: { display: 'flex', justifyContent: 'center', gap: '15px', marginBottom: '20px' },
   socialLink: { fontSize: '0.8rem', color: '#007bff', textDecoration: 'none', fontWeight: '600' },
-  voteBtn: { background: '#007bff', color: '#fff', border: 'none', padding: '12px 24px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', width: '100%' },
+  voteBtn: { background: 'linear-gradient(135deg, #007bff 0%, #0056b3 100%)', color: '#fff', border: 'none', padding: '12px 24px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', width: '100%', boxShadow: '0 4px 12px rgba(0,123,255,0.3)', transition: 'all 0.3s ease' },
   votedLabel: { color: '#94a3b8', fontWeight: 'bold', padding: '12px', border: '1px dashed #cbd5e1', borderRadius: '8px' },
   votedAlreadyLabel: { color: '#16a34a', fontWeight: 'bold', padding: '12px', border: '2px solid #16a34a', borderRadius: '8px', backgroundColor: '#f0fdf4', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontSize: '1rem' },
-  logoutBtn: { background: '#ef4444', color: '#fff', border: 'none', padding: '8px 20px', borderRadius: '8px', cursor: 'pointer', fontWeight: '600' },
+  logoutBtn: { background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)', color: '#fff', border: 'none', padding: '8px 20px', borderRadius: '8px', cursor: 'pointer', fontWeight: '600', boxShadow: '0 2px 8px rgba(239,68,68,0.3)' },
   successCard: { background: '#fff', padding: '50px', borderRadius: '30px', maxWidth: '600px', margin: '0 auto', boxShadow: '0 20px 25px rgba(0,0,0,0.1)' },
   statsSection: { marginTop: '20px', textAlign: 'left' },
   statRow: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' },
@@ -584,7 +604,7 @@ const styles = {
   modalContent: { background: '#fff', width: '90%', maxWidth: '500px', padding: '30px', borderRadius: '20px', boxShadow: '0 20px 40px rgba(0,0,0,0.2)' },
   modalHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #eee', paddingBottom: '15px', marginBottom: '15px' },
   closeBtn: { background: 'none', border: 'none', fontSize: '24px', cursor: 'pointer', color: '#888' },
-  secondaryBtn: { background: '#e7f0ff', color: '#007bff', border: '1px solid #007bff', padding: '8px 15px', borderRadius: '8px', cursor: 'pointer', fontWeight: '600', fontSize: '14px' },
+  secondaryBtn: { background: '#e7f0ff', color: '#007bff', border: '1px solid #007bff', padding: '8px 15px', borderRadius: '8px', cursor: 'pointer', fontWeight: '600', fontSize: '14px', transition: 'all 0.2s' },
   voterSocialLink: { fontSize: '0.75rem', color: '#0077b5', textDecoration: 'none', fontWeight: '600', padding: '4px 8px', backgroundColor: '#f0f7ff', borderRadius: '4px' },
   timestamp: { fontSize: '0.8rem', color: '#64748b', marginTop: '4px' },
   welcomeText: { fontSize: '2.5rem', marginBottom: '10px' },
