@@ -29,9 +29,12 @@ const Dashboard = ({ user: userProp, setUser }) => {
 
   // Fetch session ONCE on mount - single source of truth
   useEffect(() => {
-    const fetchSession = async (retryCount = 0, maxRetries = 2) => {
+    const fetchSession = async (retryCount = 0, maxRetries = 3) => {
       try {
-        const res = await axios.get(`${API_URL}/auth/login/success`, { withCredentials: true });
+        const res = await axios.get(`${API_URL}/auth/login/success`, { 
+          withCredentials: true,
+          timeout: 10000 // 10 second timeout
+        });
         if (res.data && res.data.user) {
           console.log('✅ User authenticated:', res.data.user.name);
           const userData = res.data.user;
@@ -42,26 +45,34 @@ const Dashboard = ({ user: userProp, setUser }) => {
             setUser(userData);
           }
         } else {
-          console.log('⚠️ No session, redirecting to login');
+          console.log('⚠️ No session data, redirecting to login');
           navigate('/login');
         }
       } catch (err) {
         if (err.response?.status === 401) {
-          // Retry with exponential backoff: 800ms, 1600ms
+          // Retry with exponential backoff: 1000ms, 2000ms, 3000ms
           if (retryCount < maxRetries) {
-            const delay = 800 * Math.pow(2, retryCount);
+            const delay = 1000 * (retryCount + 1);
             console.log(`🔄 Session not ready (attempt ${retryCount + 1}/${maxRetries + 1}), retrying in ${delay}ms...`);
             setTimeout(() => fetchSession(retryCount + 1, maxRetries), delay);
             return;
           }
           console.log('ℹ️ Not authenticated after retries, redirecting to login');
+        } else if (err.code === 'ECONNABORTED') {
+          console.error('❌ Session request timeout');
+          if (retryCount < maxRetries) {
+            setTimeout(() => fetchSession(retryCount + 1, maxRetries), 1000);
+            return;
+          }
         } else {
           console.error('❌ Session error:', err.message);
         }
         navigate('/login');
       }
     };
-    fetchSession();
+    
+    // Add a small initial delay to ensure OAuth callback has completed
+    setTimeout(() => fetchSession(), 300);
   }, []); // Only on mount
 
   // Load candidates and voters data

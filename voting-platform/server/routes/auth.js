@@ -47,16 +47,59 @@ router.get(
   passport.authenticate('google', {
     failureRedirect: `${process.env.CLIENT_URL || 'http://localhost:3000'}/login`,
   }),
-  (req, res) => {
-    // Explicitly save session before redirect to ensure it's persisted
-    req.session.save((err) => {
-      if (err) {
-        console.error('❌ Google session save error:', err);
-        return res.redirect(`${process.env.CLIENT_URL || 'http://localhost:3000'}/login?error=session`);
+  async (req, res) => {
+    try {
+      // Ensure user is in session
+      if (!req.user) {
+        console.error('❌ Google OAuth: No user in session after authentication');
+        return res.redirect(`${process.env.CLIENT_URL || 'http://localhost:3000'}/login?error=no_user`);
       }
-      console.log('✅ Google OAuth session saved for:', req.user?.name);
-      res.redirect(`${process.env.CLIENT_URL || 'http://localhost:3000'}/dashboard`);
-    });
+
+      console.log('✅ Google OAuth authenticated:', req.user.name, 'User ID:', req.user.id);
+
+      // Force session regeneration for better reliability
+      const userData = req.user;
+      req.session.regenerate((regenerateErr) => {
+        if (regenerateErr) {
+          console.error('❌ Session regenerate error:', regenerateErr);
+          // Continue anyway, try to save
+        }
+
+        // Re-attach user to session
+        req.user = userData;
+        
+        // Explicitly save session with multiple retries
+        let saveAttempts = 0;
+        const maxAttempts = 3;
+        
+        const saveSession = () => {
+          saveAttempts++;
+          req.session.save((err) => {
+            if (err) {
+              console.error(`❌ Google session save error (attempt ${saveAttempts}):`, err);
+              if (saveAttempts < maxAttempts) {
+                // Retry after short delay
+                setTimeout(saveSession, 200);
+                return;
+              }
+              return res.redirect(`${process.env.CLIENT_URL || 'http://localhost:3000'}/login?error=session_save`);
+            }
+            
+            console.log(`✅ Google OAuth session saved successfully (attempt ${saveAttempts}) for:`, req.user?.name);
+            
+            // Add a small delay before redirect to ensure session is fully persisted
+            setTimeout(() => {
+              res.redirect(`${process.env.CLIENT_URL || 'http://localhost:3000'}/dashboard`);
+            }, 100);
+          });
+        };
+        
+        saveSession();
+      });
+    } catch (error) {
+      console.error('❌ Google callback error:', error);
+      res.redirect(`${process.env.CLIENT_URL || 'http://localhost:3000'}/login?error=server`);
+    }
   }
 );
 
@@ -75,16 +118,59 @@ router.get(
   passport.authenticate('linkedin', {
     failureRedirect: `${process.env.CLIENT_URL || 'http://localhost:3000'}/login`,
   }),
-  (req, res) => {
-    // Explicitly save session before redirect to ensure it's persisted
-    req.session.save((err) => {
-      if (err) {
-        console.error('❌ LinkedIn session save error:', err);
-        return res.redirect(`${process.env.CLIENT_URL || 'http://localhost:3000'}/login?error=session`);
+  async (req, res) => {
+    try {
+      // Ensure user is in session
+      if (!req.user) {
+        console.error('❌ LinkedIn OAuth: No user in session after authentication');
+        return res.redirect(`${process.env.CLIENT_URL || 'http://localhost:3000'}/login?error=no_user`);
       }
-      console.log('✅ LinkedIn OAuth session saved for:', req.user?.name);
-      res.redirect(`${process.env.CLIENT_URL || 'http://localhost:3000'}/dashboard`);
-    });
+
+      console.log('✅ LinkedIn OAuth authenticated:', req.user.name, 'User ID:', req.user.id);
+
+      // Force session regeneration for better reliability
+      const userData = req.user;
+      req.session.regenerate((regenerateErr) => {
+        if (regenerateErr) {
+          console.error('❌ Session regenerate error:', regenerateErr);
+          // Continue anyway, try to save
+        }
+
+        // Re-attach user to session
+        req.user = userData;
+        
+        // Explicitly save session with multiple retries
+        let saveAttempts = 0;
+        const maxAttempts = 3;
+        
+        const saveSession = () => {
+          saveAttempts++;
+          req.session.save((err) => {
+            if (err) {
+              console.error(`❌ LinkedIn session save error (attempt ${saveAttempts}):`, err);
+              if (saveAttempts < maxAttempts) {
+                // Retry after short delay
+                setTimeout(saveSession, 200);
+                return;
+              }
+              return res.redirect(`${process.env.CLIENT_URL || 'http://localhost:3000'}/login?error=session_save`);
+            }
+            
+            console.log(`✅ LinkedIn OAuth session saved successfully (attempt ${saveAttempts}) for:`, req.user?.name);
+            
+            // Add a small delay before redirect to ensure session is fully persisted
+            setTimeout(() => {
+              res.redirect(`${process.env.CLIENT_URL || 'http://localhost:3000'}/dashboard`);
+            }, 100);
+          });
+        };
+        
+        saveSession();
+      });
+    } catch (error) {
+      console.error('❌ LinkedIn callback error:', error);
+      res.redirect(`${process.env.CLIENT_URL || 'http://localhost:3000'}/login?error=server`);
+    }
   }
 );
 
@@ -331,11 +417,14 @@ router.post('/reset-password', async (req, res) => {
 // Auth Status
 // ====================
 router.get('/login/success', async (req, res) => {
+  console.log('📍 /login/success called - Session ID:', req.sessionID, '- Has User:', !!req.user);
+  
   if (req.user) {
     try {
       // Fetch the latest user data from database to ensure hasVoted is current
       const freshUser = await User.findById(req.user.id);
       if (freshUser) {
+        console.log('✅ Returning user data for:', freshUser.name);
         return res.json({ 
           success: true, 
           user: {
@@ -350,11 +439,16 @@ router.get('/login/success', async (req, res) => {
             votedFor: freshUser.votedFor
           }
         });
+      } else {
+        console.error('❌ User not found in database:', req.user.id);
       }
     } catch (err) {
-      console.error("Error fetching fresh user data:", err);
+      console.error("❌ Error fetching fresh user data:", err);
     }
+  } else {
+    console.log('⚠️ No user in session');
   }
+  
   res.status(401).json({ success: false, message: "Not authenticated" });
 });
 

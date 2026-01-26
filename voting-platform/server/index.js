@@ -114,11 +114,15 @@ try {
       secret: process.env.SESSION_SECRET || "secret_key",
       resave: true, // Force session save on every request
       saveUninitialized: false, // Don't create session until something stored
+      rolling: true, // Reset cookie maxAge on every request
       store: MongoStore.create({
         mongoUrl: process.env.MONGO_URI,
         ttl: 24 * 60 * 60, // Session TTL in seconds (24 hours)
         autoRemove: 'native', // Use MongoDB's TTL feature
         touchAfter: 0, // Update session immediately
+        crypto: {
+          secret: process.env.SESSION_SECRET || "secret_key"
+        }
       }),
       cookie: {
         secure: true, // Always true for production (Vercel uses HTTPS)
@@ -131,14 +135,16 @@ try {
       }
     })
   );
+  console.log('✅ Session middleware configured with MongoStore');
 } catch (error) {
   console.error('❌ Session middleware error:', error);
   // Fallback to in-memory sessions if MongoStore fails
   app.use(
     session({
       secret: process.env.SESSION_SECRET || "secret_key",
-      resave: false,
+      resave: true,
       saveUninitialized: false,
+      rolling: true,
       cookie: {
         secure: true,
         sameSite: 'none',
@@ -147,6 +153,7 @@ try {
       }
     })
   );
+  console.log('⚠️ Fallback to in-memory sessions');
 }
 
 // --------------------
