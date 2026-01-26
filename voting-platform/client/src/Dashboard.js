@@ -592,7 +592,26 @@ if (votedCandidate) {
         )}
 
         {hasVoted ? (
-          <div style={{...styles.votedBadge, display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'center'}}><FiCheckCircle /> Vote Recorded</div>
+          <div className="vote-recorded-badge" style={{
+            ...styles.votedBadge, 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: '10px', 
+            justifyContent: 'center',
+            padding: '12px 24px',
+            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            color: '#ffffff',
+            borderRadius: '50px',
+            boxShadow: '0 8px 20px rgba(102, 126, 234, 0.4)',
+            fontWeight: '600',
+            fontSize: '0.95rem',
+            letterSpacing: '0.5px',
+            border: '2px solid rgba(255, 255, 255, 0.3)',
+            backdropFilter: 'blur(10px)'
+          }}>
+            <FiCheckCircle size={20} style={{ strokeWidth: 3 }} /> 
+            <span>Vote Successfully Recorded</span>
+          </div>
         ) : (
           <p style={styles.subText}>Please cast your vote for one of the candidates below.</p>
         )}

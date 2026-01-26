@@ -96,20 +96,30 @@ button svg {
 
 /* Card hover effect */
 .candidate-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 15px 35px rgba(0,0,0,0.12);
+  transform: translateY(-5px) scale(1.02);
+  box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+  border-color: rgba(59, 130, 246, 0.3);
 }
 
 /* Vote button hover effect */
 button[style*="voteBtn"]:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(0,123,255,0.4);
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 0 8px 25px rgba(0,123,255,0.5);
+  background: linear-gradient(135deg, #0056b3 0%, #004494 100%) !important;
 }
 
 /* Secondary button hover */
 button[style*="secondaryBtn"]:hover {
-  background: #d4e7ff;
-  transform: translateY(-1px);
+  background: linear-gradient(135deg, #e7f0ff 0%, #d4e7ff 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,123,255,0.2);
+}
+
+/* Profile buttons hover effects */
+button[style*="editProfileBtn"]:hover,
+button[style*="addProfileBtn"]:hover {
+  transform: translateX(3px);
+  box-shadow: 0 4px 12px rgba(0,123,255,0.3);
 }
 
 /* Mobile menu button hover */
@@ -751,8 +761,83 @@ div[style*="mobileProfile"]:hover {
   }
 }
 
+/* ====== Vote Recorded Badge Animation ====== */
+.vote-recorded-badge {
+  animation: voteSuccess 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  position: relative;
+  overflow: hidden;
+}
+
+@keyframes voteSuccess {
+  0% {
+    transform: scale(0.8) translateY(-10px);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+  }
+}
+
+.vote-recorded-badge::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    45deg,
+    transparent,
+    rgba(255, 255, 255, 0.1),
+    transparent
+  );
+  transform: rotate(45deg);
+  animation: shimmer 3s infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%) translateY(-100%) rotate(45deg);
+  }
+  100% {
+    transform: translateX(100%) translateY(100%) rotate(45deg);
+  }
+}
+
+/* Vote recorded badge responsive */
+@media (max-width: 768px) {
+  .vote-recorded-badge {
+    font-size: 0.85rem !important;
+    padding: 10px 20px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .vote-recorded-badge {
+    font-size: 0.8rem !important;
+    padding: 8px 16px !important;
+    gap: 8px !important;
+  }
+  
+  .vote-recorded-badge span {
+    display: inline-block;
+  }
+}
+
 /* Accessibility: Reduce motion for users who prefer it */
 @media (prefers-reduced-motion: reduce) {
+  .vote-recorded-badge {
+    animation: none;
+  }
+  
+  .vote-recorded-badge::before {
+    animation: none;
+  }
+  
   @keyframes fadeIn {
     from, to {
       opacity: 1;
@@ -768,5 +853,79 @@ div[style*="mobileProfile"]:hover {
   button[style*="mobileMenuBtn2"]:hover,
   button[style*="mobileMenuLogout"]:hover {
     transform: none;
+  }
+  
+  .vote-recorded-badge {
+    animation: none;
+  }
+  
+  .vote-recorded-badge::before {
+    animation: none;
+  }
+}
+
+/* ====== Additional UX Improvements ====== */
+
+/* Smooth focus states for accessibility */
+button:focus-visible,
+input:focus-visible {
+  outline: 3px solid rgba(59, 130, 246, 0.5);
+  outline-offset: 2px;
+}
+
+/* Better touch targets for mobile */
+@media (max-width: 768px) {
+  button {
+    min-height: 44px;
+    min-width: 44px;
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1);
+  }
+  
+  /* Profile status section responsive */
+  div[style*="profileStatus"] {
+    padding: 12px !important;
+    margin: 16px 0 !important;
+  }
+  
+  div[style*="profileLinked"],
+  div[style*="profileWarning"] {
+    flex-wrap: wrap;
+    gap: 8px !important;
+  }
+  
+  /* Improve readability on mobile */
+  .welcome-text {
+    font-size: 1.8rem !important;
+  }
+  
+  .sub-text {
+    font-size: 0.9rem !important;
+  }
+}
+
+/* Loading states */
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+/* Smooth transitions for all interactive elements */
+* {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Improve card appearance on mobile */
+@media (max-width: 480px) {
+  div[style*="card"] {
+    padding: 20px !important;
+    width: 100% !important;
+    max-width: 320px !important;
+  }
+  
+  img[style*="avatar"] {
+    width: 90px !important;
+    height: 90px !important;
   }
 }

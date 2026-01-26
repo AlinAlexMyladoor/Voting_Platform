@@ -553,10 +553,82 @@
   .submit-btn {
     padding: 11px;
     font-size: 13px;
+    min-height: 44px; /* Better touch target */
   }
 
   .form-group input {
     padding: 9px 10px;
+    min-height: 44px; /* Better touch target */
+  }
+}
+
+/* Enhanced Mobile Touch Targets and Accessibility */
+@media (max-width: 768px) {
+  /* Ensure all interactive elements meet minimum touch target size (44x44px) */
+  .login-btn,
+  .register-btn,
+  .submit-btn,
+  .back-btn,
+  .toggle-link {
+    min-height: 48px;
+    min-width: 48px;
+    cursor: pointer;
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1);
+  }
+
+  .form-group input,
+  .form-group select {
+    min-height: 48px;
+    font-size: 16px; /* Prevents zoom on iOS */
+  }
+
+  /* Prevent horizontal scroll */
+  .login-container {
+    overflow-x: hidden;
+    width: 100%;
+  }
+
+  .login-card {
+    max-width: 100%;
+    width: 100%;
+  }
+
+  /* Better focus states for mobile */
+  .form-group input:focus {
+    border-color: #007bff;
+    outline: 2px solid rgba(0, 123, 255, 0.25);
+    outline-offset: 2px;
+  }
+
+  /* Smooth scroll for mobile */
+  .login-container {
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* Mobile Keyboard Open Adjustments */
+@media (max-width: 768px) and (max-height: 500px) {
+  .login-card {
+    padding: 20px 25px;
+  }
+
+  .login-card h1 {
+    font-size: 26px;
+    margin-bottom: 5px;
+  }
+
+  .login-card p {
+    font-size: 9px;
+    margin-bottom: 15px;
+  }
+
+  .button-group {
+    gap: 8px;
+  }
+
+  .form-group {
+    margin-bottom: 12px;
   }
 }
 
@@ -587,5 +659,23 @@
 
   .divider {
     margin: 15px 0;
+  }
+}
+
+/* Dark mode support for mobile */
+@media (prefers-color-scheme: dark) and (max-width: 768px) {
+  .login-card {
+    background: rgba(30, 30, 30, 0.95);
+    color: #ffffff;
+  }
+
+  .form-group input {
+    background: rgba(255, 255, 255, 0.1);
+    color: #ffffff;
+    border-color: rgba(255, 255, 255, 0.2);
+  }
+
+  .form-group input::placeholder {
+    color: rgba(255, 255, 255, 0.5);
   }
 }
