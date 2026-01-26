@@ -649,20 +649,28 @@ button[style*="mobileMenuBtn2"]:hover {
 
 /* ====== Mobile Menu Specific Styles ====== */
 
-/* Hide desktop nav on mobile, show menu button */
+/* Mobile menu button - hidden on desktop, shown on mobile */
+.mobile-menu-btn {
+  display: none !important;
+}
+
 @media (max-width: 768px) {
-  div[style*="navDesktop"] {
-    display: none !important;
+  .mobile-menu-btn {
+    display: flex !important;
   }
   
-  button[style*="mobileMenuBtn"]:not([style*="mobileMenuBtn2"]) {
-    display: flex !important;
+  .nav-desktop {
+    display: none !important;
   }
 }
 
-/* Hide mobile menu button on desktop */
+/* Desktop navigation - shown on desktop, hidden on mobile */
 @media (min-width: 769px) {
-  button[style*="mobileMenuBtn"]:not([style*="mobileMenuBtn2"]) {
+  .nav-desktop {
+    display: flex !important;
+  }
+  
+  .mobile-menu-btn {
     display: none !important;
   }
 }

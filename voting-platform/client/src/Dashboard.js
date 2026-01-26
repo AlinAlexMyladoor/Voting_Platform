@@ -475,7 +475,7 @@ if (votedCandidate) {
         </div>
 
         {/* Desktop Navigation */}
-        <div style={styles.navDesktop}>
+        <div className="nav-desktop" style={styles.navDesktop}>
           {/* User Profile Section */}
           <div style={styles.navProfile}>
             <img
@@ -503,7 +503,7 @@ if (votedCandidate) {
         </div>
 
         {/* Mobile Menu Toggle */}
-        <button style={styles.mobileMenuBtn} onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
+        <button className="mobile-menu-btn" style={styles.mobileMenuBtn} onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
           {mobileMenuOpen ? <FiX size={24} /> : <FiMenu size={24} />}
         </button>
       </nav>
