@@ -646,3 +646,119 @@ button[style*="mobileMenuBtn2"]:hover {
     max-width: 350px;
   }
 }
+
+/* ====== Mobile Menu Specific Styles ====== */
+
+/* Hide desktop nav on mobile, show menu button */
+@media (max-width: 768px) {
+  div[style*="navDesktop"] {
+    display: none !important;
+  }
+  
+  button[style*="mobileMenuBtn"]:not([style*="mobileMenuBtn2"]) {
+    display: flex !important;
+  }
+}
+
+/* Hide mobile menu button on desktop */
+@media (min-width: 769px) {
+  button[style*="mobileMenuBtn"]:not([style*="mobileMenuBtn2"]) {
+    display: none !important;
+  }
+}
+
+/* Mobile menu animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Apply animations to mobile menu */
+div[style*="mobileMenu"] {
+  animation: fadeIn 0.3s ease;
+}
+
+div[style*="mobileMenuContent"] {
+  animation: slideUp 0.3s ease;
+}
+
+/* Mobile menu button hover effects */
+button[style*="mobileMenuBtn2"]:hover {
+  background: #e7f0ff !important;
+  border-color: #007bff !important;
+  color: #007bff !important;
+  transform: translateX(5px);
+}
+
+button[style*="mobileMenuLogout"]:hover {
+  background: #fecaca !important;
+  transform: translateX(5px);
+}
+
+/* Smooth transitions for mobile menu items */
+button[style*="mobileMenuBtn2"],
+button[style*="mobileMenuLogout"] {
+  transition: all 0.3s ease !important;
+}
+
+/* Mobile menu profile hover */
+div[style*="mobileProfile"] {
+  transition: all 0.3s ease;
+}
+
+div[style*="mobileProfile"]:hover {
+  transform: scale(1.02);
+}
+
+/* Enhanced mobile menu for small screens */
+@media (max-width: 480px) {
+  div[style*="mobileMenuContent"] {
+    padding: 20px !important;
+    border-radius: 20px 20px 0 0 !important;
+  }
+
+  div[style*="mobileProfile"] {
+    padding: 14px !important;
+  }
+
+  button[style*="mobileMenuBtn2"],
+  button[style*="mobileMenuLogout"] {
+    padding: 12px !important;
+    font-size: 0.95rem !important;
+  }
+}
+
+/* Accessibility: Reduce motion for users who prefer it */
+@media (prefers-reduced-motion: reduce) {
+  @keyframes fadeIn {
+    from, to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes slideUp {
+    from, to {
+      transform: translateY(0);
+    }
+  }
+
+  button[style*="mobileMenuBtn2"]:hover,
+  button[style*="mobileMenuLogout"]:hover {
+    transform: none;
+  }
+}

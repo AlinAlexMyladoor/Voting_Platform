@@ -468,14 +468,87 @@ if (votedCandidate) {
         </div>
       )}
 
+      {/* Enhanced Navbar with Mobile Menu */}
       <nav style={styles.nav}>
-        <h3 style={{ margin: 0, color: '#007bff' }}>E-Ballot</h3>
-        <div style={{ display: 'flex', gap: '15px' }}>
-          <button onClick={() => setShowResultsModal(true)} style={{...styles.secondaryBtn, display: 'flex', alignItems: 'center', gap: '6px'}}><FiBarChart2 /> View Results</button>
-          <button onClick={() => setShowVoterModal(true)} style={styles.secondaryBtn}>� View Voters</button>
-          <button onClick={handleLogout} style={{...styles.logoutBtn, display: 'flex', alignItems: 'center', gap: '6px'}}><FiLogOut /> Logout</button>
+        <div style={styles.navBrand}>
+          <h3 style={{ margin: 0, color: '#007bff', fontWeight: '700', fontSize: '1.5rem' }}>E-Ballot</h3>
         </div>
+
+        {/* Desktop Navigation */}
+        <div style={styles.navDesktop}>
+          {/* User Profile Section */}
+          <div style={styles.navProfile}>
+            <img
+              src={user?.profilePicture || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(user?.name || 'U')}`}
+              style={styles.navAvatar}
+              alt="Profile"
+              onError={(e) => { e.target.src = `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(user?.name || 'U')}`; }}
+            />
+            <div style={styles.navUserInfo}>
+              <span style={styles.navUserName}>{user?.name || 'Voter'}</span>
+              <span style={styles.navUserEmail}>{user?.email || ''}</span>
+            </div>
+          </div>
+
+          {/* Action Buttons */}
+          <button onClick={() => setShowResultsModal(true)} style={{...styles.secondaryBtn, display: 'flex', alignItems: 'center', gap: '6px'}}>
+            <FiBarChart2 /> Results
+          </button>
+          <button onClick={() => setShowVoterModal(true)} style={{...styles.secondaryBtn, display: 'flex', alignItems: 'center', gap: '6px'}}>
+            <FiUsers /> Voters
+          </button>
+          <button onClick={handleLogout} style={{...styles.logoutBtn, display: 'flex', alignItems: 'center', gap: '6px'}}>
+            <FiLogOut /> Logout
+          </button>
+        </div>
+
+        {/* Mobile Menu Toggle */}
+        <button style={styles.mobileMenuBtn} onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
+          {mobileMenuOpen ? <FiX size={24} /> : <FiMenu size={24} />}
+        </button>
       </nav>
+
+      {/* Mobile Dropdown Menu */}
+      {mobileMenuOpen && (
+        <div style={styles.mobileMenu} onClick={() => setMobileMenuOpen(false)}>
+          <div style={styles.mobileMenuContent} onClick={(e) => e.stopPropagation()}>
+            {/* Mobile Profile Section */}
+            <div style={styles.mobileProfile}>
+              <img
+                src={user?.profilePicture || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(user?.name || 'U')}`}
+                style={styles.mobileAvatar}
+                alt="Profile"
+                onError={(e) => { e.target.src = `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(user?.name || 'U')}`; }}
+              />
+              <div style={styles.mobileUserInfo}>
+                <span style={styles.mobileUserName}>{user?.name || 'Voter'}</span>
+                <span style={styles.mobileUserEmail}>{user?.email || ''}</span>
+                {user?.linkedin && (
+                  <a href={user.linkedin} target="_blank" rel="noreferrer" style={styles.mobileLinkedIn}>
+                    <FiExternalLink size={12} /> LinkedIn Profile
+                  </a>
+                )}
+              </div>
+            </div>
+
+            <div style={styles.mobileDivider}></div>
+
+            {/* Mobile Action Buttons */}
+            <button onClick={() => { setShowResultsModal(true); setMobileMenuOpen(false); }} style={styles.mobileMenuBtn2}>
+              <FiBarChart2 /> View Results
+            </button>
+            <button onClick={() => { setShowVoterModal(true); setMobileMenuOpen(false); }} style={styles.mobileMenuBtn2}>
+              <FiUsers /> View Voters
+            </button>
+            <button onClick={() => { setShowProfileModal(true); setMobileMenuOpen(false); }} style={styles.mobileMenuBtn2}>
+              <FiUser /> Edit Profile
+            </button>
+            <button onClick={handleLogout} style={styles.mobileMenuLogout}>
+              <FiLogOut /> Logout
+            </button>
+          </div>
+        </div>
+      )}
 
       <header style={styles.header}>
         <h1 style={styles.welcomeText}>
