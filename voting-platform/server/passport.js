@@ -4,14 +4,20 @@ const OAuth2Strategy = require('passport-oauth2').Strategy;
 const axios = require('axios');
 const User = require('./models/User');
 
-passport.serializeUser((user, done) => done(null, user.id));
+passport.serializeUser((user, done) => {
+  console.log('🔐 Serializing user:', user.name, 'ID:', user._id || user.id);
+  done(null, user._id || user.id);
+});
 
 passport.deserializeUser(async (id, done) => {
   try {
+    console.log('🔓 Deserializing user ID:', id);
     const user = await User.findById(id);
     if (!user) {
+      console.error('❌ User not found during deserialization:', id);
       return done(null, false);
     }
+    console.log('✅ User deserialized:', user.name);
     // Return the full user object with all necessary fields
     done(null, {
       id: user._id,
@@ -25,6 +31,7 @@ passport.deserializeUser(async (id, done) => {
       votedFor: user.votedFor
     });
   } catch (err) {
+    console.error('❌ Deserialization error:', err);
     done(err, null);
   }
 });

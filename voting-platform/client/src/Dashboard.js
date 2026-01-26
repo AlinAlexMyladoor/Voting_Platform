@@ -29,11 +29,11 @@ const Dashboard = ({ user: userProp, setUser }) => {
 
   // Fetch session ONCE on mount - single source of truth
   useEffect(() => {
-    const fetchSession = async (retryCount = 0, maxRetries = 3) => {
+    const fetchSession = async (retryCount = 0, maxRetries = 4) => {
       try {
         const res = await axios.get(`${API_URL}/auth/login/success`, { 
           withCredentials: true,
-          timeout: 10000 // 10 second timeout
+          timeout: 15000 // 15 second timeout
         });
         if (res.data && res.data.user) {
           console.log('✅ User authenticated:', res.data.user.name);
@@ -50,9 +50,9 @@ const Dashboard = ({ user: userProp, setUser }) => {
         }
       } catch (err) {
         if (err.response?.status === 401) {
-          // Retry with exponential backoff: 1000ms, 2000ms, 3000ms
+          // Retry with longer delays: 1.5s, 2.5s, 3.5s, 4.5s
           if (retryCount < maxRetries) {
-            const delay = 1000 * (retryCount + 1);
+            const delay = 1500 + (retryCount * 1000);
             console.log(`🔄 Session not ready (attempt ${retryCount + 1}/${maxRetries + 1}), retrying in ${delay}ms...`);
             setTimeout(() => fetchSession(retryCount + 1, maxRetries), delay);
             return;
@@ -61,7 +61,7 @@ const Dashboard = ({ user: userProp, setUser }) => {
         } else if (err.code === 'ECONNABORTED') {
           console.error('❌ Session request timeout');
           if (retryCount < maxRetries) {
-            setTimeout(() => fetchSession(retryCount + 1, maxRetries), 1000);
+            setTimeout(() => fetchSession(retryCount + 1, maxRetries), 2000);
             return;
           }
         } else {
@@ -71,8 +71,8 @@ const Dashboard = ({ user: userProp, setUser }) => {
       }
     };
     
-    // Add a small initial delay to ensure OAuth callback has completed
-    setTimeout(() => fetchSession(), 300);
+    // Add a longer initial delay to ensure OAuth callback has completed
+    setTimeout(() => fetchSession(), 500);
   }, []); // Only on mount
 
   // Load candidates and voters data

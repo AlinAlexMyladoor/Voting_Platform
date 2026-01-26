@@ -45,32 +45,32 @@ router.get('/google',
 router.get(
   '/google/callback',
   passport.authenticate('google', {
-    failureRedirect: `${process.env.CLIENT_URL || 'http://localhost:3000'}/login`,
+    failureRedirect: `${process.env.CLIENT_URL || 'http://localhost:3000'}/login?error=auth_failed`,
   }),
   async (req, res) => {
     try {
-      // Ensure user is in session
+      // Ensure user is authenticated
       if (!req.user) {
         console.error('❌ Google OAuth: No user in session after authentication');
         return res.redirect(`${process.env.CLIENT_URL || 'http://localhost:3000'}/login?error=no_user`);
       }
 
-      console.log('✅ Google OAuth authenticated:', req.user.name, 'User ID:', req.user.id);
+      console.log('✅ Google OAuth authenticated:', req.user.name, 'User ID:', req.user._id || req.user.id);
 
-      // Force session regeneration for better reliability
+      // Use req.login() to ensure user is properly logged in
       const userData = req.user;
-      req.session.regenerate((regenerateErr) => {
-        if (regenerateErr) {
-          console.error('❌ Session regenerate error:', regenerateErr);
-          // Continue anyway, try to save
+      
+      req.login(userData, (loginErr) => {
+        if (loginErr) {
+          console.error('❌ Login error:', loginErr);
+          return res.redirect(`${process.env.CLIENT_URL || 'http://localhost:3000'}/login?error=login_failed`);
         }
 
-        // Re-attach user to session
-        req.user = userData;
+        console.log('✅ User logged in, session ID:', req.sessionID);
         
         // Explicitly save session with multiple retries
         let saveAttempts = 0;
-        const maxAttempts = 3;
+        const maxAttempts = 5;
         
         const saveSession = () => {
           saveAttempts++;
@@ -79,18 +79,19 @@ router.get(
               console.error(`❌ Google session save error (attempt ${saveAttempts}):`, err);
               if (saveAttempts < maxAttempts) {
                 // Retry after short delay
-                setTimeout(saveSession, 200);
+                setTimeout(saveSession, 300);
                 return;
               }
               return res.redirect(`${process.env.CLIENT_URL || 'http://localhost:3000'}/login?error=session_save`);
             }
             
-            console.log(`✅ Google OAuth session saved successfully (attempt ${saveAttempts}) for:`, req.user?.name);
+            console.log(`✅ Google OAuth session saved (attempt ${saveAttempts}) - Session ID:`, req.sessionID);
+            console.log('   User in session:', req.user?.name, '- Has passport user:', !!req.session.passport?.user);
             
-            // Add a small delay before redirect to ensure session is fully persisted
+            // Add delay to ensure session is fully persisted to MongoDB
             setTimeout(() => {
               res.redirect(`${process.env.CLIENT_URL || 'http://localhost:3000'}/dashboard`);
-            }, 100);
+            }, 200);
           });
         };
         
@@ -116,32 +117,32 @@ router.get(
 router.get(
   '/linkedin/callback',
   passport.authenticate('linkedin', {
-    failureRedirect: `${process.env.CLIENT_URL || 'http://localhost:3000'}/login`,
+    failureRedirect: `${process.env.CLIENT_URL || 'http://localhost:3000'}/login?error=auth_failed`,
   }),
   async (req, res) => {
     try {
-      // Ensure user is in session
+      // Ensure user is authenticated
       if (!req.user) {
         console.error('❌ LinkedIn OAuth: No user in session after authentication');
         return res.redirect(`${process.env.CLIENT_URL || 'http://localhost:3000'}/login?error=no_user`);
       }
 
-      console.log('✅ LinkedIn OAuth authenticated:', req.user.name, 'User ID:', req.user.id);
+      console.log('✅ LinkedIn OAuth authenticated:', req.user.name, 'User ID:', req.user._id || req.user.id);
 
-      // Force session regeneration for better reliability
+      // Use req.login() to ensure user is properly logged in
       const userData = req.user;
-      req.session.regenerate((regenerateErr) => {
-        if (regenerateErr) {
-          console.error('❌ Session regenerate error:', regenerateErr);
-          // Continue anyway, try to save
+      
+      req.login(userData, (loginErr) => {
+        if (loginErr) {
+          console.error('❌ Login error:', loginErr);
+          return res.redirect(`${process.env.CLIENT_URL || 'http://localhost:3000'}/login?error=login_failed`);
         }
 
-        // Re-attach user to session
-        req.user = userData;
+        console.log('✅ User logged in, session ID:', req.sessionID);
         
         // Explicitly save session with multiple retries
         let saveAttempts = 0;
-        const maxAttempts = 3;
+        const maxAttempts = 5;
         
         const saveSession = () => {
           saveAttempts++;
@@ -150,18 +151,19 @@ router.get(
               console.error(`❌ LinkedIn session save error (attempt ${saveAttempts}):`, err);
               if (saveAttempts < maxAttempts) {
                 // Retry after short delay
-                setTimeout(saveSession, 200);
+                setTimeout(saveSession, 300);
                 return;
               }
               return res.redirect(`${process.env.CLIENT_URL || 'http://localhost:3000'}/login?error=session_save`);
             }
             
-            console.log(`✅ LinkedIn OAuth session saved successfully (attempt ${saveAttempts}) for:`, req.user?.name);
+            console.log(`✅ LinkedIn OAuth session saved (attempt ${saveAttempts}) - Session ID:`, req.sessionID);
+            console.log('   User in session:', req.user?.name, '- Has passport user:', !!req.session.passport?.user);
             
-            // Add a small delay before redirect to ensure session is fully persisted
+            // Add delay to ensure session is fully persisted to MongoDB
             setTimeout(() => {
               res.redirect(`${process.env.CLIENT_URL || 'http://localhost:3000'}/dashboard`);
-            }, 100);
+            }, 200);
           });
         };
         
