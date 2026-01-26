@@ -68,9 +68,9 @@ router.get(
 
         console.log('✅ User logged in, session ID:', req.sessionID);
         
-        // Explicitly save session with multiple retries
+        // Explicitly save session with multiple retries and longer delays
         let saveAttempts = 0;
-        const maxAttempts = 5;
+        const maxAttempts = 7;
         
         const saveSession = () => {
           saveAttempts++;
@@ -78,8 +78,8 @@ router.get(
             if (err) {
               console.error(`❌ Google session save error (attempt ${saveAttempts}):`, err);
               if (saveAttempts < maxAttempts) {
-                // Retry after short delay
-                setTimeout(saveSession, 300);
+                // Retry with increasing delay: 500ms, 1000ms, 1500ms...
+                setTimeout(saveSession, saveAttempts * 500);
                 return;
               }
               return res.redirect(`${process.env.CLIENT_URL || 'http://localhost:3000'}/login?error=session_save`);
@@ -88,10 +88,10 @@ router.get(
             console.log(`✅ Google OAuth session saved (attempt ${saveAttempts}) - Session ID:`, req.sessionID);
             console.log('   User in session:', req.user?.name, '- Has passport user:', !!req.session.passport?.user);
             
-            // Add delay to ensure session is fully persisted to MongoDB
+            // Add longer delay to ensure session is fully persisted to MongoDB (especially for cold starts)
             setTimeout(() => {
               res.redirect(`${process.env.CLIENT_URL || 'http://localhost:3000'}/dashboard`);
-            }, 200);
+            }, 500);
           });
         };
         
@@ -140,9 +140,9 @@ router.get(
 
         console.log('✅ User logged in, session ID:', req.sessionID);
         
-        // Explicitly save session with multiple retries
+        // Explicitly save session with multiple retries and longer delays
         let saveAttempts = 0;
-        const maxAttempts = 5;
+        const maxAttempts = 7;
         
         const saveSession = () => {
           saveAttempts++;
@@ -150,8 +150,8 @@ router.get(
             if (err) {
               console.error(`❌ LinkedIn session save error (attempt ${saveAttempts}):`, err);
               if (saveAttempts < maxAttempts) {
-                // Retry after short delay
-                setTimeout(saveSession, 300);
+                // Retry with increasing delay: 500ms, 1000ms, 1500ms...
+                setTimeout(saveSession, saveAttempts * 500);
                 return;
               }
               return res.redirect(`${process.env.CLIENT_URL || 'http://localhost:3000'}/login?error=session_save`);
@@ -160,10 +160,10 @@ router.get(
             console.log(`✅ LinkedIn OAuth session saved (attempt ${saveAttempts}) - Session ID:`, req.sessionID);
             console.log('   User in session:', req.user?.name, '- Has passport user:', !!req.session.passport?.user);
             
-            // Add delay to ensure session is fully persisted to MongoDB
+            // Add longer delay to ensure session is fully persisted to MongoDB (especially for cold starts)
             setTimeout(() => {
               res.redirect(`${process.env.CLIENT_URL || 'http://localhost:3000'}/dashboard`);
-            }, 200);
+            }, 500);
           });
         };
         

@@ -29,11 +29,11 @@ const Dashboard = ({ user: userProp, setUser }) => {
 
   // Fetch session ONCE on mount - single source of truth
   useEffect(() => {
-    const fetchSession = async (retryCount = 0, maxRetries = 4) => {
+    const fetchSession = async (retryCount = 0, maxRetries = 6) => {
       try {
         const res = await axios.get(`${API_URL}/auth/login/success`, { 
           withCredentials: true,
-          timeout: 15000 // 15 second timeout
+          timeout: 20000 // 20 second timeout
         });
         if (res.data && res.data.user) {
           console.log('✅ User authenticated:', res.data.user.name);
@@ -50,9 +50,9 @@ const Dashboard = ({ user: userProp, setUser }) => {
         }
       } catch (err) {
         if (err.response?.status === 401) {
-          // Retry with longer delays: 1.5s, 2.5s, 3.5s, 4.5s
+          // Aggressive retry with exponential backoff: 2s, 3s, 4s, 5s, 6s, 7s
           if (retryCount < maxRetries) {
-            const delay = 1500 + (retryCount * 1000);
+            const delay = 2000 + (retryCount * 1000);
             console.log(`🔄 Session not ready (attempt ${retryCount + 1}/${maxRetries + 1}), retrying in ${delay}ms...`);
             setTimeout(() => fetchSession(retryCount + 1, maxRetries), delay);
             return;
@@ -61,7 +61,7 @@ const Dashboard = ({ user: userProp, setUser }) => {
         } else if (err.code === 'ECONNABORTED') {
           console.error('❌ Session request timeout');
           if (retryCount < maxRetries) {
-            setTimeout(() => fetchSession(retryCount + 1, maxRetries), 2000);
+            setTimeout(() => fetchSession(retryCount + 1, maxRetries), 3000);
             return;
           }
         } else {
@@ -72,7 +72,7 @@ const Dashboard = ({ user: userProp, setUser }) => {
     };
     
     // Add a longer initial delay to ensure OAuth callback has completed
-    setTimeout(() => fetchSession(), 500);
+    setTimeout(() => fetchSession(), 1000);
   }, []); // Only on mount
 
   // Load candidates and voters data
