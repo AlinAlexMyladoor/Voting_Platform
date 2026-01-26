@@ -812,7 +812,8 @@ div[style*="mobileProfile"]:hover {
 @media (max-width: 768px) {
   .vote-recorded-badge {
     font-size: 0.85rem !important;
-    padding: 10px 20px !important;
+    padding: 9px 18px !important;
+    max-width: 250px !important;
   }
 }
 
@@ -821,6 +822,7 @@ div[style*="mobileProfile"]:hover {
     font-size: 0.8rem !important;
     padding: 8px 16px !important;
     gap: 8px !important;
+    max-width: 220px !important;
   }
   
   .vote-recorded-badge span {
@@ -929,3 +931,131 @@ button:disabled {
     height: 90px !important;
   }
 }
+
+/* ====== Additional Subtle UX Enhancements ====== */
+
+/* Smooth page transitions */
+.dashboard-container {
+  animation: fadeInPage 0.5s ease;
+}
+
+@keyframes fadeInPage {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Candidate card entrance animation */
+div[style*="card"] {
+  animation: cardEntrance 0.4s ease backwards;
+}
+
+div[style*="card"]:nth-child(1) { animation-delay: 0.1s; }
+div[style*="card"]:nth-child(2) { animation-delay: 0.2s; }
+div[style*="card"]:nth-child(3) { animation-delay: 0.3s; }
+div[style*="card"]:nth-child(4) { animation-delay: 0.4s; }
+
+@keyframes cardEntrance {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Button ripple effect on click */
+@keyframes ripple {
+  0% {
+    transform: scale(0);
+    opacity: 0.5;
+  }
+  100% {
+    transform: scale(2);
+    opacity: 0;
+  }
+}
+
+/* Improve text readability */
+p, span, div {
+  text-rendering: optimizeLegibility;
+}
+
+/* Enhance LinkedIn icon in profile */
+svg[style*="color"] {
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+  transition: all 0.3s ease;
+}
+
+svg[style*="color"]:hover {
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.15));
+  transform: scale(1.1);
+}
+
+/* Improve modal backdrop */
+div[style*="position: fixed"][style*="rgba(0,0,0"] {
+  backdrop-filter: blur(4px);
+  transition: opacity 0.3s ease;
+}
+
+/* Better spacing for profile status section */
+@media (max-width: 768px) {
+  div[style*="profileStatus"] {
+    margin: 20px 0 !important;
+  }
+  
+  div[style*="profileLinked"] button,
+  div[style*="profileWarning"] button {
+    margin-top: 8px;
+  }
+}
+
+/* Smooth image loading */
+img {
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+}
+
+/* Add subtle pulse to vote button */
+button[style*="voteBtn"]:not(:disabled) {
+  animation: subtlePulse 2s ease-in-out infinite;
+}
+
+@keyframes subtlePulse {
+  0%, 100% {
+    box-shadow: 0 4px 15px rgba(0, 123, 255, 0.3);
+  }
+  50% {
+    box-shadow: 0 4px 20px rgba(0, 123, 255, 0.5);
+  }
+}
+
+/* Reduce animations on mobile for performance */
+@media (max-width: 768px) {
+  div[style*="card"] {
+    animation: none;
+  }
+  
+  button[style*="voteBtn"] {
+    animation: none;
+  }
+}
+
+/* Accessibility improvements */
+@media (prefers-reduced-motion: reduce) {
+  .dashboard-container,
+  div[style*="card"],
+  button[style*="voteBtn"] {
+    animation: none !important;
+  }
+  
+  * {
+    transition-duration: 0.01ms !important;
+  }
+}
+

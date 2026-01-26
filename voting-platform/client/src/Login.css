@@ -357,12 +357,15 @@
     overflow-y: auto;
     min-height: 100vh;
     height: auto;
+    display: flex;
+    align-items: center;
   }
 
   .login-card {
     padding: 40px 30px;
     max-width: 100%;
-    margin: 20px 0;
+    width: 100%;
+    margin: 20px auto;
     box-shadow: 0 15px 35px -10px rgba(0, 0, 0, 0.3);
   }
 
@@ -388,6 +391,7 @@
   .login-btn {
     padding: 14px;
     font-size: 15px;
+    min-height: 50px;
   }
 
   .login-btn img {
@@ -399,11 +403,13 @@
   .submit-btn {
     padding: 13px;
     font-size: 14px;
+    min-height: 48px;
   }
 
   .form-group input {
     padding: 11px 12px;
-    font-size: 14px;
+    font-size: 16px; /* Prevents iOS zoom */
+    min-height: 48px;
   }
 
   /* Reduce floating sphere sizes on mobile */
@@ -421,13 +427,14 @@
 /* Mobile phones (480px and below) */
 @media (max-width: 480px) {
   .login-container {
-    padding: 15px;
+    padding: 12px;
   }
 
   .login-card {
     padding: 30px 20px;
     border-radius: 20px;
-    margin: 10px 0;
+    margin: 10px auto;
+    max-width: 100%;
   }
 
   .login-card h1 {
@@ -454,6 +461,7 @@
     padding: 12px;
     font-size: 14px;
     gap: 10px;
+    min-height: 48px;
   }
 
   .login-btn img {
@@ -470,11 +478,13 @@
   .submit-btn {
     padding: 12px;
     font-size: 14px;
+    min-height: 48px;
   }
 
   .back-btn {
     padding: 10px;
     font-size: 13px;
+    min-height: 44px;
   }
 
   .form-group {
@@ -488,7 +498,8 @@
 
   .form-group input {
     padding: 10px 12px;
-    font-size: 13px;
+    font-size: 16px; /* Prevents iOS zoom */
+    min-height: 48px;
   }
 
   .error-message,
@@ -505,7 +516,8 @@
 
   .link-btn {
     font-size: 13px;
-    padding: 6px 0;
+    padding: 8px 0;
+    min-height: 44px;
   }
 
   /* Further reduce sphere sizes on small phones */
@@ -677,5 +689,121 @@
 
   .form-group input::placeholder {
     color: rgba(255, 255, 255, 0.5);
+  }
+}
+
+/* ====== Additional UX Enhancements ====== */
+
+/* Smooth focus transitions */
+.form-group input:focus,
+.login-btn:focus,
+.register-btn:focus,
+.submit-btn:focus,
+.back-btn:focus {
+  outline: 3px solid rgba(59, 130, 246, 0.4);
+  outline-offset: 2px;
+  transform: translateY(-1px);
+  transition: all 0.2s ease;
+}
+
+/* Touch-friendly tap highlights */
+@media (max-width: 768px) {
+  .login-btn,
+  .register-btn,
+  .submit-btn,
+  .back-btn,
+  .link-btn {
+    -webkit-tap-highlight-color: rgba(59, 130, 246, 0.2);
+    touch-action: manipulation;
+  }
+}
+
+/* Prevent zoom on double tap for iOS */
+button,
+input {
+  touch-action: manipulation;
+}
+
+/* Loading state for buttons */
+.login-btn:disabled,
+.register-btn:disabled,
+.submit-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+/* Smooth scroll behavior */
+.login-container {
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Error message animation */
+.error-message {
+  animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Success message animation */
+.success-message {
+  animation: fadeInScale 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Improve button press feedback */
+.login-btn:active,
+.register-btn:active,
+.submit-btn:active,
+.back-btn:active {
+  transform: translateY(1px) scale(0.98);
+}
+
+/* Better hover states for desktop */
+@media (min-width: 769px) {
+  .login-btn:hover,
+  .register-btn:hover,
+  .submit-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+  }
+  
+  .link-btn:hover {
+    transform: translateX(3px);
+  }
+}
+
+/* Accessibility: Reduce motion for users who prefer it */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  
+  .login-container::before,
+  .login-container::after,
+  .login-card::before {
+    animation: none !important;
   }
 }
