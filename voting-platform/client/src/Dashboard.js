@@ -4,6 +4,8 @@ import axios from 'axios';
 import confetti from 'canvas-confetti';
 import './Dashboard.css';
 import Plot from 'react-plotly.js';
+import { FiBarChart2, FiUsers, FiLogOut, FiCheckCircle, FiAlertCircle, FiExternalLink } from 'react-icons/fi';
+import { HiOutlineTrendingUp } from 'react-icons/hi';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
@@ -250,7 +252,7 @@ const Dashboard = ({ user: userProp, setUser }) => {
       <div style={styles.modalOverlay} onClick={() => setShowResultsModal(false)}>
         <div style={{...styles.modalContent, maxWidth: '700px'}} onClick={(e) => e.stopPropagation()}>
           <div style={styles.modalHeader}>
-            <h2 style={{ margin: 0 }}>📊 Live Election Results</h2>
+            <h2 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '10px' }}><FiBarChart2 style={{ color: '#007bff' }} /> Live Election Results</h2>
             <button onClick={() => setShowResultsModal(false)} style={styles.closeBtn}>&times;</button>
           </div>
           <div style={{ padding: '20px 0' }}>
@@ -302,7 +304,7 @@ if (votedCandidate) {
   return (
     <div style={styles.container}>
       <div style={styles.successCard}>
-        <div style={{ fontSize: '60px', marginBottom: '10px' }}>📊</div>
+        <div style={{ fontSize: '60px', marginBottom: '10px', color: '#007bff', display: 'flex', justifyContent: 'center' }}><HiOutlineTrendingUp /></div>
         <h1 style={{ color: '#1e293b', marginBottom: '5px' }}>Election Live Results</h1>
         <p style={{ color: '#64748b' }}>Thank you for voting for <b>{votedCandidate}</b>!</p>
         
@@ -401,7 +403,7 @@ if (votedCandidate) {
         <div style={styles.modalOverlay} onClick={() => setShowVoterModal(false)}>
           <div style={styles.modalContent} onClick={(e) => e.stopPropagation()}>
             <div style={styles.modalHeader}>
-              <h2 style={{ margin: 0 }}>Verified Voters ({voters.length})</h2>
+              <h2 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '10px' }}><FiUsers style={{ color: '#007bff' }} /> Verified Voters ({voters.length})</h2>
               <button onClick={() => setShowVoterModal(false)} style={styles.closeBtn}>&times;</button>
             </div>
             <div style={styles.list}>
@@ -447,7 +449,7 @@ if (votedCandidate) {
               referrerPolicy="no-referrer"
               style={styles.voterSocialLink}
             >
-              View Profile 🔗
+              <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>View Profile <FiExternalLink size={12} /></span>
             </a>
           ) : (
             <span style={{ fontSize: '0.7rem', color: '#cbd5e1' }}>No Profile Linked</span>
@@ -468,9 +470,9 @@ if (votedCandidate) {
       <nav style={styles.nav}>
         <h3 style={{ margin: 0, color: '#007bff' }}>E-Ballot</h3>
         <div style={{ display: 'flex', gap: '15px' }}>
-          <button onClick={() => setShowResultsModal(true)} style={styles.secondaryBtn}>📊 View Results</button>
+          <button onClick={() => setShowResultsModal(true)} style={{...styles.secondaryBtn, display: 'flex', alignItems: 'center', gap: '6px'}}><FiBarChart2 /> View Results</button>
           <button onClick={() => setShowVoterModal(true)} style={styles.secondaryBtn}>� View Voters</button>
-          <button onClick={handleLogout} style={styles.logoutBtn}>Logout</button>
+          <button onClick={handleLogout} style={{...styles.logoutBtn, display: 'flex', alignItems: 'center', gap: '6px'}}><FiLogOut /> Logout</button>
         </div>
       </nav>
 
@@ -484,7 +486,7 @@ if (votedCandidate) {
           <div style={styles.profileStatus}>
             {user.linkedin ? (
               <div style={styles.profileLinked}>
-                <span style={{ fontSize: '1.1rem' }}>✅</span>
+                <FiCheckCircle style={{ fontSize: '1.1rem', color: '#10b981' }} />
                 <span>LinkedIn Profile Linked</span>
                 <button 
                   onClick={() => {
@@ -498,7 +500,7 @@ if (votedCandidate) {
               </div>
             ) : (
               <div style={styles.profileWarning}>
-                <span style={{ fontSize: '1.1rem' }}>⚠️</span>
+                <FiAlertCircle style={{ fontSize: '1.1rem', color: '#f59e0b' }} />
                 <span>
                   {user.provider === 'linkedin' 
                     ? 'Add Your LinkedIn Profile URL' 
@@ -516,7 +518,7 @@ if (votedCandidate) {
         )}
 
         {hasVoted ? (
-          <div style={styles.votedBadge}>✅ Vote Recorded</div>
+          <div style={{...styles.votedBadge, display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'center'}}><FiCheckCircle /> Vote Recorded</div>
         ) : (
           <p style={styles.subText}>Please cast your vote for one of the candidates below.</p>
         )}
@@ -544,7 +546,7 @@ if (votedCandidate) {
               </button>
             ) : (
               <div style={styles.votedAlreadyLabel}>
-                <span style={{ fontSize: '1.2rem' }}>✅</span>
+                <FiCheckCircle style={{ fontSize: '1.2rem', color: '#16a34a' }} />
                 <span>Voted Already</span>
               </div>
             )}

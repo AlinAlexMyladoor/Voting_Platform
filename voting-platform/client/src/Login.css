@@ -345,3 +345,247 @@
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
 }
+
+/* ========================================
+   RESPONSIVE DESIGN - MOBILE FIRST
+======================================== */
+
+/* Tablets and below (768px) */
+@media (max-width: 768px) {
+  .login-container {
+    padding: 20px;
+    overflow-y: auto;
+    min-height: 100vh;
+    height: auto;
+  }
+
+  .login-card {
+    padding: 40px 30px;
+    max-width: 100%;
+    margin: 20px 0;
+    box-shadow: 0 15px 35px -10px rgba(0, 0, 0, 0.3);
+  }
+
+  .login-card h1 {
+    font-size: 36px;
+    text-shadow: 2px 2px 0px #e2e8f0;
+  }
+
+  .login-card p {
+    font-size: 11px;
+    letter-spacing: 2px;
+    margin-bottom: 30px;
+  }
+
+  .login-card h2 {
+    font-size: 24px;
+  }
+
+  .button-group {
+    gap: 12px;
+  }
+
+  .login-btn {
+    padding: 14px;
+    font-size: 15px;
+  }
+
+  .login-btn img {
+    width: 22px;
+    height: 22px;
+  }
+
+  .register-btn,
+  .submit-btn {
+    padding: 13px;
+    font-size: 14px;
+  }
+
+  .form-group input {
+    padding: 11px 12px;
+    font-size: 14px;
+  }
+
+  /* Reduce floating sphere sizes on mobile */
+  .login-container::before {
+    width: 250px;
+    height: 250px;
+  }
+
+  .login-container::after {
+    width: 200px;
+    height: 200px;
+  }
+}
+
+/* Mobile phones (480px and below) */
+@media (max-width: 480px) {
+  .login-container {
+    padding: 15px;
+  }
+
+  .login-card {
+    padding: 30px 20px;
+    border-radius: 20px;
+    margin: 10px 0;
+  }
+
+  .login-card h1 {
+    font-size: 32px;
+    margin-bottom: 3px;
+  }
+
+  .login-card p {
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    margin-bottom: 25px;
+  }
+
+  .login-card h2 {
+    font-size: 22px;
+    margin-bottom: 15px;
+  }
+
+  .button-group {
+    gap: 10px;
+  }
+
+  .login-btn {
+    padding: 12px;
+    font-size: 14px;
+    gap: 10px;
+  }
+
+  .login-btn img {
+    width: 20px;
+    height: 20px;
+  }
+
+  .divider {
+    margin: 20px 0;
+    font-size: 13px;
+  }
+
+  .register-btn,
+  .submit-btn {
+    padding: 12px;
+    font-size: 14px;
+  }
+
+  .back-btn {
+    padding: 10px;
+    font-size: 13px;
+  }
+
+  .form-group {
+    margin-bottom: 14px;
+  }
+
+  .form-group label {
+    font-size: 13px;
+    margin-bottom: 5px;
+  }
+
+  .form-group input {
+    padding: 10px 12px;
+    font-size: 13px;
+  }
+
+  .error-message,
+  .success-message {
+    padding: 10px;
+    font-size: 13px;
+  }
+
+  .auth-links {
+    gap: 10px;
+    margin-top: 14px;
+    padding-top: 14px;
+  }
+
+  .link-btn {
+    font-size: 13px;
+    padding: 6px 0;
+  }
+
+  /* Further reduce sphere sizes on small phones */
+  .login-container::before {
+    width: 200px;
+    height: 200px;
+    top: -50px;
+    left: -50px;
+  }
+
+  .login-container::after {
+    width: 150px;
+    height: 150px;
+    bottom: -30px;
+    right: -30px;
+  }
+
+  /* Reduce light border effect on mobile */
+  .login-card::after {
+    inset: 6px;
+    border-radius: 18px;
+  }
+}
+
+/* Extra small phones (360px and below) */
+@media (max-width: 360px) {
+  .login-card {
+    padding: 25px 15px;
+  }
+
+  .login-card h1 {
+    font-size: 28px;
+  }
+
+  .login-card h2 {
+    font-size: 20px;
+  }
+
+  .button-group {
+    gap: 8px;
+  }
+
+  .login-btn,
+  .register-btn,
+  .submit-btn {
+    padding: 11px;
+    font-size: 13px;
+  }
+
+  .form-group input {
+    padding: 9px 10px;
+  }
+}
+
+/* Landscape mode adjustments for mobile */
+@media (max-height: 600px) and (orientation: landscape) {
+  .login-container {
+    height: auto;
+    min-height: 100vh;
+  }
+
+  .login-card {
+    margin: 15px auto;
+    padding: 25px 30px;
+  }
+
+  .login-card h1 {
+    font-size: 30px;
+    margin-bottom: 2px;
+  }
+
+  .login-card p {
+    margin-bottom: 20px;
+  }
+
+  .button-group {
+    gap: 8px;
+  }
+
+  .divider {
+    margin: 15px 0;
+  }
+}

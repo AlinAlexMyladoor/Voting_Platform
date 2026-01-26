@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './Login.css';
+import { FiAlertCircle } from 'react-icons/fi';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 const CLIENT_URL = window.location.origin;
@@ -346,7 +347,9 @@ const Login = () => {
             fontSize: '0.9rem',
             color: '#856404'
           }}>
-            <strong>⚠️ Incognito/Private Mode Detected</strong>
+            <strong style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <FiAlertCircle /> Incognito/Private Mode Detected
+            </strong>
             <p style={{ margin: '8px 0 0 0', fontSize: '0.85rem' }}>
               OAuth login (Google/LinkedIn) may not work in incognito mode due to third-party cookie restrictions. 
               <br/>
