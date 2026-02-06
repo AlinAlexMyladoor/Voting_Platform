@@ -1,0 +1,16 @@
+// Add this to your client/src/App.js to keep server warm
+
+import { useEffect } from 'react';
+
+function App() {
+  // Keep server warm by pinging every 4 minutes
+  useEffect(() => {
+    const keepWarm = setInterval(() => {
+      fetch('/api/', { method: 'HEAD' }).catch(() => {});
+    }, 4 * 60 * 1000); // 4 minutes
+    
+    return () => clearInterval(keepWarm);
+  }, []);
+
+  // ... rest of your App component
+}
