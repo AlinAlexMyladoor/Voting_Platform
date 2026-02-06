@@ -2,7 +2,13 @@ import React, { useState, useEffect } from 'react';
 import './Login.css';
 import { FiAlertCircle } from 'react-icons/fi';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+// In production, use relative URLs (Vercel rewrites handle routing)
+// In development, use localhost server
+const API_URL = process.env.REACT_APP_API_URL || (
+  process.env.NODE_ENV === 'production' 
+    ? '' // Empty string = relative URLs (/api, /auth)
+    : 'http://localhost:5000'
+);
 const CLIENT_URL = window.location.origin;
 
 const Login = () => {

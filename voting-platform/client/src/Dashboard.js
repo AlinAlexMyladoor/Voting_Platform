@@ -7,7 +7,13 @@ import Plot from 'react-plotly.js';
 import { FiBarChart2, FiUsers, FiLogOut, FiCheckCircle, FiAlertCircle, FiExternalLink, FiMenu, FiX, FiUser } from 'react-icons/fi';
 import { HiOutlineTrendingUp } from 'react-icons/hi';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+// In production, use relative URLs (Vercel rewrites handle routing)
+// In development, use localhost server
+const API_URL = process.env.REACT_APP_API_URL || (
+  process.env.NODE_ENV === 'production' 
+    ? '' // Empty string = relative URLs (/api, /auth)
+    : 'http://localhost:5000'
+);
 
 // Configure axios to always send credentials
 axios.defaults.withCredentials = true;
