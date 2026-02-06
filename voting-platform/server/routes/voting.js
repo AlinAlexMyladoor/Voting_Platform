@@ -145,6 +145,15 @@ router.post("/vote/:candidateId", isAuthenticated, async (req, res) => {
       return res.status(400).json({ message: "You have already cast your vote!" });
     }
 
+    // Check if user has provided LinkedIn URL
+    if (!user.linkedin || user.linkedin.trim() === '') {
+      console.log('⚠️ User attempted to vote without LinkedIn URL:', userId);
+      return res.status(403).json({ 
+        message: "Please add your LinkedIn profile URL before voting",
+        requiresLinkedin: true 
+      });
+    }
+
     // Atomic Update: Save user and increment candidate.voteCount
     await Promise.all([
       User.findByIdAndUpdate(userId, { 

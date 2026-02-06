@@ -176,6 +176,13 @@ const Dashboard = ({ user: userProp, setUser }) => {
   const castVote = async (candidateId, candidateName, retryCount = 0) => {
     console.log('🗳️ Voting for:', candidateName);
     
+    // Check if LinkedIn URL is provided
+    if (!user?.linkedin || user.linkedin.trim() === '') {
+      alert("Please add your LinkedIn profile URL before voting. Click on your profile to add it.");
+      setShowProfileModal(true);
+      return;
+    }
+    
     // Double-check voting status before making the API call
     if (hasVoted || user?.hasVoted) {
       alert("You have already cast your vote!");
@@ -238,6 +245,9 @@ const Dashboard = ({ user: userProp, setUser }) => {
       if (err.response?.status === 401) {
         alert("Session expired. Please login again.");
         navigate('/login');
+      } else if (err.response?.status === 403 && err.response?.data?.requiresLinkedin) {
+        alert("Please add your LinkedIn profile URL before voting.");
+        setShowProfileModal(true);
       } else {
         alert(err.response?.data?.message || "Voting failed. Please try again.");
       }
@@ -383,6 +393,24 @@ if (votedCandidate) {
               <button onClick={() => setShowProfileModal(false)} style={styles.closeBtn}>&times;</button>
             </div>
             <div style={{ padding: '20px 0' }}>
+              {(!user?.linkedin || user.linkedin.trim() === '') && (
+                <div style={{
+                  background: '#fef3c7',
+                  border: '1px solid #fbbf24',
+                  borderRadius: '8px',
+                  padding: '12px',
+                  marginBottom: '15px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '10px',
+                  color: '#92400e'
+                }}>
+                  <FiAlertCircle style={{ fontSize: '1.3rem', flexShrink: 0 }} />
+                  <span style={{ fontSize: '0.9rem', fontWeight: '500' }}>
+                    <strong>Required for voting:</strong> You must add your LinkedIn profile URL before you can cast your vote.
+                  </span>
+                </div>
+              )}
               <p style={{ color: '#64748b', marginBottom: '15px' }}>
                 {user?.provider === 'linkedin' ? (
                   <>
@@ -631,6 +659,30 @@ if (votedCandidate) {
             <FiCheckCircle size={18} style={{ strokeWidth: 3 }} /> 
             <span>Vote Recorded</span>
           </div>
+        ) : !user?.linkedin || user.linkedin.trim() === '' ? (
+          <div style={{
+            ...styles.profileWarning,
+            maxWidth: '600px',
+            margin: '0 auto 20px',
+            padding: '15px 20px',
+            fontSize: '0.95rem',
+            justifyContent: 'center'
+          }}>
+            <FiAlertCircle style={{ fontSize: '1.3rem', color: '#f59e0b' }} />
+            <span style={{ fontWeight: '600' }}>
+              You must add your LinkedIn profile URL before voting
+            </span>
+            <button 
+              onClick={() => setShowProfileModal(true)} 
+              style={{
+                ...styles.addProfileBtn,
+                padding: '8px 16px',
+                fontSize: '0.9rem'
+              }}
+            >
+              Add LinkedIn Now
+            </button>
+          </div>
         ) : (
           <p style={styles.subText}>Please cast your vote for one of the candidates below.</p>
         )}
@@ -653,7 +705,15 @@ if (votedCandidate) {
             </div>
 
             {!hasVoted ? (
-              <button onClick={() => castVote(c._id, c.name)} style={styles.voteBtn}>
+              <button 
+                onClick={() => castVote(c._id, c.name)} 
+                style={{
+                  ...styles.voteBtn,
+                  opacity: (!user?.linkedin || user.linkedin.trim() === '') ? 0.5 : 1,
+                  cursor: (!user?.linkedin || user.linkedin.trim() === '') ? 'not-allowed' : 'pointer'
+                }}
+                disabled={!user?.linkedin || user.linkedin.trim() === ''}
+              >
                 Vote for {c.name.split(' ')[0]}
               </button>
             ) : (
