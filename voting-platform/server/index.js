@@ -112,26 +112,25 @@ try {
   app.use(
     session({
       secret: process.env.SESSION_SECRET || "secret_key",
-      resave: true, // Force session save on every request
+      resave: false, // Don't save session if unmodified (prevents race conditions)
       saveUninitialized: false, // Don't create session until something stored
       rolling: true, // Reset cookie maxAge on every request
       store: MongoStore.create({
         mongoUrl: process.env.MONGO_URI,
         ttl: 24 * 60 * 60, // Session TTL in seconds (24 hours)
         autoRemove: 'native', // Use MongoDB's TTL feature
-        touchAfter: 0, // Update session immediately
+        touchAfter: 24 * 3600, // Only update session once per 24h unless changed
         crypto: {
           secret: process.env.SESSION_SECRET || "secret_key"
         }
       }),
       cookie: {
         secure: true, // Always true for production (Vercel uses HTTPS)
-        sameSite: 'none', // Required for cross-domain cookies
+        sameSite: 'lax', // Same-site cookies work now with Vercel rewrites
         maxAge: 24 * 60 * 60 * 1000, // 24 hours
         httpOnly: true,
-        // Note: Incognito mode may block third-party cookies
-        // This affects cross-domain (e-ballot.vercel.app → e-ballotserver.vercel.app)
-        partitioned: true, // Chrome's new CHIPS - allows cross-site cookies in incognito
+        // With Vercel rewrites, all requests appear same-origin
+        // No need for partitioned cookies or sameSite: 'none'
       }
     })
   );
@@ -142,12 +141,12 @@ try {
   app.use(
     session({
       secret: process.env.SESSION_SECRET || "secret_key",
-      resave: true,
+      resave: false,
       saveUninitialized: false,
       rolling: true,
       cookie: {
         secure: true,
-        sameSite: 'none',
+        sameSite: 'lax',
         maxAge: 24 * 60 * 60 * 1000,
         httpOnly: true
       }
