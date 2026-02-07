@@ -216,6 +216,7 @@ app.use(async (req, res, next) => {
 app.get("/", (req, res) => {
   res.json({ 
     message: "Backend is running!",
+    version: "1.0.1",
     timestamp: new Date().toISOString(),
     mongoConnected: mongoose.connection.readyState === 1
   });
