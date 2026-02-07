@@ -659,30 +659,6 @@ if (votedCandidate) {
             <FiCheckCircle size={18} style={{ strokeWidth: 3 }} /> 
             <span>Vote Recorded</span>
           </div>
-        ) : !user?.linkedin || user.linkedin.trim() === '' ? (
-          <div style={{
-            ...styles.profileWarning,
-            maxWidth: '600px',
-            margin: '0 auto 20px',
-            padding: '15px 20px',
-            fontSize: '0.95rem',
-            justifyContent: 'center'
-          }}>
-            <FiAlertCircle style={{ fontSize: '1.3rem', color: '#f59e0b' }} />
-            <span style={{ fontWeight: '600' }}>
-              You must add your LinkedIn profile URL before voting
-            </span>
-            <button 
-              onClick={() => setShowProfileModal(true)} 
-              style={{
-                ...styles.addProfileBtn,
-                padding: '8px 16px',
-                fontSize: '0.9rem'
-              }}
-            >
-              Add LinkedIn Now
-            </button>
-          </div>
         ) : (
           <p style={styles.subText}>Please cast your vote for one of the candidates below.</p>
         )}
