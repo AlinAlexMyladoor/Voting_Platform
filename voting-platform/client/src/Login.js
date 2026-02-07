@@ -88,8 +88,35 @@ const Login = () => {
     }
   }, []);
 
-  const handleOAuthLogin = (provider) => {
-    // Use window.location.href instead of window.open for better reliability
+  const handleOAuthLogin = async (provider) => {
+    // Warm up the server first to ensure MongoDB is connected
+    setIsLoading(true);
+    try {
+      // Ping the server to wake it up (wait up to 5 seconds)
+      const warmupPromise = fetch(`${API_URL}/`, { 
+        method: 'GET',
+        credentials: 'include'
+      }).catch(() => {
+        // Ignore warmup errors, proceed anyway
+        console.log('Server warmup request sent');
+      });
+
+      // Wait max 3 seconds for warmup, then proceed
+      await Promise.race([
+        warmupPromise,
+        new Promise(resolve => setTimeout(resolve, 3000))
+      ]);
+
+      // Small delay to let MongoDB connect
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+    } catch (e) {
+      console.log('Warmup skipped:', e);
+    } finally {
+      setIsLoading(false);
+    }
+
+    // Proceed with OAuth login
     window.location.href = `${API_URL}/auth/${provider}`;
   };
 

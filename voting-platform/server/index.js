@@ -17,29 +17,45 @@ const app = express();
 // Connect to MongoDB before anything else
 // Vercel serverless needs this at the top
 let isConnected = false;
+let connectionPromise = null;
 
 const connectDB = async () => {
-  if (isConnected) {
+  // If already connected, return immediately
+  if (isConnected && mongoose.connection.readyState === 1) {
     console.log('♻️ Using existing MongoDB connection');
     return;
   }
 
-  try {
-    const db = await mongoose.connect(process.env.MONGO_URI, {
-      serverSelectionTimeoutMS: 10000, // Increased from 5s to 10s
-      socketTimeoutMS: 45000,
-      maxPoolSize: 10, // Connection pool size
-      minPoolSize: 2,  // Minimum connections
-      retryWrites: true,
-      retryReads: true,
-    });
-    isConnected = db.connections[0].readyState === 1;
-    console.log('✅ MongoDB connected successfully');
-  } catch (error) {
-    console.error('❌ MongoDB connection failed:', error.message);
-    isConnected = false; // Ensure flag is reset on failure
-    throw error;
+  // If connection is in progress, wait for it
+  if (connectionPromise) {
+    console.log('⏳ Waiting for existing connection attempt...');
+    return connectionPromise;
   }
+
+  // Start new connection attempt
+  connectionPromise = (async () => {
+    try {
+      console.log('🔌 Initiating MongoDB connection...');
+      const db = await mongoose.connect(process.env.MONGO_URI, {
+        serverSelectionTimeoutMS: 15000, // 15 seconds for first connection
+        socketTimeoutMS: 45000,
+        maxPoolSize: 10,
+        minPoolSize: 2,
+        retryWrites: true,
+        retryReads: true,
+      });
+      isConnected = db.connections[0].readyState === 1;
+      console.log('✅ MongoDB connected successfully');
+      return db;
+    } catch (error) {
+      console.error('❌ MongoDB connection failed:', error.message);
+      isConnected = false;
+      connectionPromise = null; // Allow retry
+      throw error;
+    }
+  })();
+
+  return connectionPromise;
 };
 
 // Initialize connection
@@ -205,8 +221,38 @@ app.get("/", (req, res) => {
   });
 });
 
-app.use("/auth", authRoutes);
-app.use("/api", votingRoutes);
+// Middleware to ensure MongoDB is connected before processing auth/api requests
+const ensureMongoConnected = async (req, res, next) => {
+  // If already connected, proceed
+  if (mongoose.connection.readyState === 1) {
+    return next();
+  }
+  
+  console.log('⏳ MongoDB not ready, attempting connection...');
+  
+  try {
+    // Wait for connection with timeout
+    await connectDB();
+    
+    // Double check connection is established
+    if (mongoose.connection.readyState === 1) {
+      console.log('✅ MongoDB connected, proceeding with request');
+      return next();
+    }
+    
+    throw new Error('MongoDB connection not established');
+  } catch (error) {
+    console.error('❌ MongoDB connection failed in middleware:', error.message);
+    return res.status(503).json({ 
+      error: 'Database connection error. Please try again in a moment.',
+      message: 'Service temporarily unavailable'
+    });
+  }
+};
+
+// Apply MongoDB check middleware to auth and api routes
+app.use("/auth", ensureMongoConnected, authRoutes);
+app.use("/api", ensureMongoConnected, votingRoutes);
 
 // --------------------
 // Error Handling Middleware
