@@ -1,3 +1,4 @@
+// Updated: 2026-02-07 - Session fixes applied
 const passport = require('passport');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const OAuth2Strategy = require('passport-oauth2').Strategy;
