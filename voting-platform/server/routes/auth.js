@@ -57,16 +57,24 @@ router.get(
 
       console.log('✅ Google OAuth authenticated:', req.user.name, 'User ID:', req.user._id || req.user.id);
 
-      // Use req.login() to ensure user is properly logged in
+      // Store user data before regenerating session
       const userData = req.user;
       
-      req.login(userData, (loginErr) => {
-        if (loginErr) {
-          console.error('❌ Login error:', loginErr);
-          return res.redirect(`${process.env.CLIENT_URL || 'http://localhost:3000'}/login?error=login_failed`);
+      // Regenerate session to ensure clean state (prevents session conflicts)
+      req.session.regenerate((regenerateErr) => {
+        if (regenerateErr) {
+          console.error('❌ Session regenerate error:', regenerateErr);
+          // Continue anyway, don't fail
         }
 
-        console.log('✅ User logged in, session ID:', req.sessionID);
+        // Use req.login() to ensure user is properly logged in
+        req.login(userData, (loginErr) => {
+          if (loginErr) {
+            console.error('❌ Login error:', loginErr);
+            return res.redirect(`${process.env.CLIENT_URL || 'http://localhost:3000'}/login?error=login_failed`);
+          }
+
+          console.log('✅ User logged in, session ID:', req.sessionID);
         
         // Explicitly save session with multiple retries and longer delays
         let saveAttempts = 0;
@@ -95,7 +103,8 @@ router.get(
           });
         };
         
-        saveSession();
+          saveSession();
+        });
       });
     } catch (error) {
       console.error('❌ Google callback error:', error);
@@ -129,16 +138,24 @@ router.get(
 
       console.log('✅ LinkedIn OAuth authenticated:', req.user.name, 'User ID:', req.user._id || req.user.id);
 
-      // Use req.login() to ensure user is properly logged in
+      // Store user data before regenerating session
       const userData = req.user;
       
-      req.login(userData, (loginErr) => {
-        if (loginErr) {
-          console.error('❌ Login error:', loginErr);
-          return res.redirect(`${process.env.CLIENT_URL || 'http://localhost:3000'}/login?error=login_failed`);
+      // Regenerate session to ensure clean state (prevents session conflicts)
+      req.session.regenerate((regenerateErr) => {
+        if (regenerateErr) {
+          console.error('❌ Session regenerate error:', regenerateErr);
+          // Continue anyway, don't fail
         }
 
-        console.log('✅ User logged in, session ID:', req.sessionID);
+        // Use req.login() to ensure user is properly logged in
+        req.login(userData, (loginErr) => {
+          if (loginErr) {
+            console.error('❌ Login error:', loginErr);
+            return res.redirect(`${process.env.CLIENT_URL || 'http://localhost:3000'}/login?error=login_failed`);
+          }
+
+          console.log('✅ User logged in, session ID:', req.sessionID);
         
         // Explicitly save session with multiple retries and longer delays
         let saveAttempts = 0;
@@ -167,7 +184,8 @@ router.get(
           });
         };
         
-        saveSession();
+          saveSession();
+        });
       });
     } catch (error) {
       console.error('❌ LinkedIn callback error:', error);

@@ -45,16 +45,31 @@ passport.use(new GoogleStrategy({
   },
   async (accessToken, refreshToken, profile, done) => {
     try {
+      // Check by providerId first (most reliable)
       let user = await User.findOne({ providerId: profile.id });
-      if (user) return done(null, user);
+      if (user) {
+        console.log('✅ Found existing Google user by providerId:', user.name);
+        return done(null, user);
+      }
 
       const userEmail = (profile.emails && profile.emails.length > 0) 
         ? profile.emails[0].value 
         : undefined;
 
+      // Check by email (user might exist from local auth or other provider)
       if (userEmail) {
         user = await User.findOne({ email: userEmail });
-        if (user) return done(null, user);
+        if (user) {
+          // Update existing user with Google providerId to link accounts
+          user.providerId = profile.id;
+          user.provider = 'google';
+          if (profile.photos && profile.photos.length > 0) {
+            user.profilePicture = profile.photos[0].value;
+          }
+          await user.save();
+          console.log('✅ Linked existing user with Google:', user.name);
+          return done(null, user);
+        }
       }
 
       const newUser = await new User({
@@ -106,8 +121,10 @@ passport.use('linkedin', new OAuth2Strategy({
       console.log('LinkedIn Login - Full Profile Data:', profile);
       console.log('LinkedIn Profile URL:', linkedinUrl || 'Not found in response');
 
+      // Check by providerId first (most reliable)
       let existingUser = await User.findOne({ providerId: providerId });
       if (existingUser) {
+        console.log('✅ Found existing LinkedIn user by providerId:', existingUser.name);
         // Update profile picture and LinkedIn URL if available
         if (picture && existingUser.profilePicture !== picture) {
           existingUser.profilePicture = picture;
@@ -119,10 +136,12 @@ passport.use('linkedin', new OAuth2Strategy({
         return done(null, existingUser);
       }
 
+      // Check by email (user might exist from local auth or other provider)
       if (email) {
         existingUser = await User.findOne({ email: email });
         if (existingUser) {
-          // Update existing user with LinkedIn data
+          console.log('✅ Linking existing user with LinkedIn:', existingUser.name);
+          // Update existing user with LinkedIn data to link accounts
           existingUser.provider = 'linkedin';
           existingUser.providerId = providerId;
           if (picture) existingUser.profilePicture = picture;
